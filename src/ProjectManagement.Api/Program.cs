@@ -1,4 +1,5 @@
 using ProjectManagement.Api;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +13,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
     app.UseExceptionHandler();
 }
 
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseStatusCodePages();
 
