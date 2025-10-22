@@ -1,4 +1,4 @@
-namespace ProjectManagement.Api.Domain.Entities;
+namespace ProjectManagement.Api.Common.Domain;
 
 public abstract class Entity
 {

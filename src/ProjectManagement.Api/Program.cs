@@ -1,15 +1,25 @@
+using ProjectManagement.Api;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder
+    .AddApiServices()
+    .AddDatabase();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.MapOpenApi();
+}
+else
+{
+    app.UseExceptionHandler();
 }
 
 app.UseHttpsRedirection();
+app.UseStatusCodePages();
 
 app.MapGet("/", () => "Welcome to ProjectManagement.Api");
 
