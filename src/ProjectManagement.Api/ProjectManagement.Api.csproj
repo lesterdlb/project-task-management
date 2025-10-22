@@ -16,7 +16,6 @@
         <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Common\"/>
         <Folder Include="Common\Persistence\Migrations\"/>
     </ItemGroup>
 </Project>

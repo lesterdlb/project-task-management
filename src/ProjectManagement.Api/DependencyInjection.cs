@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using ProjectManagement.Api.Common.Persistence;
+using ProjectManagement.Api.Common.Slices;
 using Serilog;
 
 namespace ProjectManagement.Api;
@@ -21,6 +22,8 @@ public static class DependencyInjection
 
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen();
+
+        builder.Services.AddSlices();
 
         return builder;
     }
