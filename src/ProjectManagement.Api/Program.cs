@@ -1,8 +1,6 @@
 using ProjectManagement.Api;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Extensions;
-using ProjectManagement.Api.Features.Users;
-using ProjectManagement.Api.Mediator;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,11 +9,7 @@ builder
     .AddApiServices()
     .AddDatabase();
 
-// TEMP
-builder.Services.AddScoped<IMediator, Mediator>();
-builder.Services
-    .AddScoped<IQueryHandler<GetUsers.GetUsersQuery, IEnumerable<GetUsers.UserDto>>,
-        GetUsers.GetUsersQueryHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 

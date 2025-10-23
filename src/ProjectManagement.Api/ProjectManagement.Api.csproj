@@ -6,6 +6,8 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="EFCore.NamingConventions"/>
+        <PackageReference Include="FluentValidation" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
             <PrivateAssets>all</PrivateAssets>
@@ -14,8 +16,10 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
         <PackageReference Include="Serilog.AspNetCore" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="System.Linq.Dynamic.Core" />
     </ItemGroup>
     <ItemGroup>
+        <Folder Include="Common\Models\Users\" />
         <Folder Include="Common\Persistence\Migrations\"/>
     </ItemGroup>
 </Project>

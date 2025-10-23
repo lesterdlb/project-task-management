@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
         var slices = currentAssembly.GetTypes().Where(t =>
             typeof(ISlice).IsAssignableFrom(t) &&
             t != typeof(ISlice) &&
-            t is { IsPublic: true, IsAbstract: false });
+            t is { IsPublic: false, IsAbstract: false });
 
         foreach (var slice in slices)
         {
