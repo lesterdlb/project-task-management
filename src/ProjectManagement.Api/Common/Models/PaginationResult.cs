@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace ProjectManagement.Api.Common.Models;
+﻿namespace ProjectManagement.Api.Common.Models;
 
 public sealed record PaginationResult<T> : ICollectionResponse<T>, ILinksResponse
 {
@@ -10,27 +8,7 @@ public sealed record PaginationResult<T> : ICollectionResponse<T>, ILinksRespons
     public int TotalCount { get; init; }
     public List<LinkDto> Links { get; set; }
 
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page < TotalPages;
-
-    public static async Task<PaginationResult<T>> CreateAsync(
-        IQueryable<T> query,
-        int page,
-        int pageSize)
-    {
-        var totalCount = await query.CountAsync();
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return new PaginationResult<T>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount
-        };
-    }
+    private int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
 }

@@ -21,7 +21,7 @@ internal sealed class Mediator(IServiceProvider provider) : IMediator
 
     public async Task<TResult> SendQueryAsync<TQuery, TResult>(
         TQuery query,
-        CancellationToken cancellationToken = default) where TQuery : IQuery
+        CancellationToken cancellationToken = default) where TQuery : IQuery<TResult>
     {
         ArgumentNullException.ThrowIfNull(query);
 

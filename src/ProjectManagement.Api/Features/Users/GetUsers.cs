@@ -33,7 +33,7 @@ internal sealed class GetUsers : ISlice
             .AddEndpointFilter<ValidationFilter<UsersQueryParameters>>();
     }
 
-    internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery;
+    internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery<PaginationResult<ExpandoObject>>;
 
     internal sealed class GetUsersQueryHandler(
         ProjectManagementDbContext dbContext,
@@ -55,7 +55,7 @@ internal sealed class GetUsers : ISlice
                             u.UserName.ToLower().Contains(query.Parameters.Search) ||
                             u.FullName.ToLower().Contains(query.Parameters.Search))
                 .ApplySort(query.Parameters.Sort, sortMappings)
-                .Select(UserQueries.ProjectToDto());
+                .Select(UserProjections.ProjectToDto());
 
             var totalCount = await usersQuery.CountAsync(cancellationToken);
             var users = await usersQuery
@@ -77,27 +77,7 @@ internal sealed class GetUsers : ISlice
         }
     }
 
-    internal sealed class UserDto
-    {
-        public required string UserName { get; init; }
-        public required string Email { get; init; }
-        public required string FullName { get; init; }
-    }
-
-    private static class UserQueries
-    {
-        public static Expression<Func<User, UserDto>> ProjectToDto()
-        {
-            return h => new UserDto
-            {
-                UserName = h.UserName,
-                Email = h.Email,
-                FullName = h.FullName
-            };
-        }
-    }
-
-    internal sealed class UsersQueryParameters : BaseQueryParameters;
+    internal sealed class UsersQueryParameters : ExtendedQueryParameters;
 
     internal sealed class UsersQueryParametersValidator : AbstractValidator<UsersQueryParameters>
     {
@@ -131,6 +111,26 @@ internal sealed class GetUsers : ISlice
                             $"The provided data shaping fields aren't valid: '{fields}'");
                     }
                 });
+        }
+    }
+
+    internal sealed class UserDto
+    {
+        public required string UserName { get; init; }
+        public required string Email { get; init; }
+        public required string FullName { get; init; }
+    }
+
+    private static class UserProjections
+    {
+        public static Expression<Func<User, UserDto>> ProjectToDto()
+        {
+            return h => new UserDto
+            {
+                UserName = h.UserName,
+                Email = h.Email,
+                FullName = h.FullName
+            };
         }
     }
 

@@ -6,7 +6,7 @@ internal interface IMediator
         where TCommand : ICommand;
 
     Task<TResult> SendQueryAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default)
-        where TQuery : IQuery;
+        where TQuery : IQuery<TResult>;
 
     Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : INotification;

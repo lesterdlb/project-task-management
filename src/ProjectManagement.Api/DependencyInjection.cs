@@ -39,6 +39,9 @@ public static class DependencyInjection
         builder.Services
             .AddScoped<IQueryHandler<GetUsers.GetUsersQuery, PaginationResult<ExpandoObject>>,
                 GetUsers.GetUsersQueryHandler>();
+        builder.Services
+            .AddScoped<IQueryHandler<GetUser.GetUserQuery, ExpandoObject?>,
+                GetUser.GetUserQueryHandler>();
 
         builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly,
