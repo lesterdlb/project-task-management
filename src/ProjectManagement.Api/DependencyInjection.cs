@@ -12,6 +12,7 @@ using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Features.Users;
 using ProjectManagement.Api.Mediator;
 using ProjectManagement.Api.Mediator.Behaviors;
+using ProjectManagement.Api.Middlewares;
 using Serilog;
 
 namespace ProjectManagement.Api;
@@ -29,7 +30,6 @@ public static class DependencyInjection
                 .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
         }, writeToProviders: true);
 
-        builder.Services.AddProblemDetails();
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen();
 
@@ -40,11 +40,7 @@ public static class DependencyInjection
             .AddScoped<IQueryHandler<GetUsers.GetUsersQuery, PaginationResult<ExpandoObject>>,
                 GetUsers.GetUsersQueryHandler>();
 
-        // Register validation behavior
         builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
-        // Register all validators in the assembly
-        // builder.Services.AddTransient<IValidator<GetUsers.GetUsersQuery>, GetUsers.GetUsersQueryValidator>();
         builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly,
             includeInternalTypes: true);
 
@@ -66,6 +62,15 @@ public static class DependencyInjection
                     npgsqlOptions => npgsqlOptions
                         .MigrationsHistoryTable(HistoryRepository.DefaultTableName, "public"))
                 .UseSnakeCaseNamingConvention());
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddErrorHandling(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         return builder;
     }

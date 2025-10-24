@@ -1,3 +1,3 @@
 namespace ProjectManagement.Api.Mediator;
 
-internal interface IQuery<TResult>;
+internal interface IQuery;

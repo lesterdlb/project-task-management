@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Domain.Entities;
+using ProjectManagement.Api.Common.Filters;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services;
@@ -17,21 +18,22 @@ internal sealed class GetUsers : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-            "api/users",
-            async (
-                [AsParameters] UsersQueryParameters query,
-                IMediator mediator,
-                CancellationToken cancellationToken) =>
-            {
-                var getUsersQuery = new GetUsersQuery(query);
-                return Results.Ok(await mediator.SendQueryAsync<GetUsersQuery, PaginationResult<ExpandoObject>>(
-                    getUsersQuery,
-                    cancellationToken));
-            }
-        );
+                "api/users",
+                async (
+                    [AsParameters] UsersQueryParameters query,
+                    IMediator mediator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var getUsersQuery = new GetUsersQuery(query);
+                    return Results.Ok(await mediator.SendQueryAsync<GetUsersQuery, PaginationResult<ExpandoObject>>(
+                        getUsersQuery,
+                        cancellationToken));
+                }
+            )
+            .AddEndpointFilter<ValidationFilter<UsersQueryParameters>>();
     }
 
-    internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery<PaginationResult<ExpandoObject>>;
+    internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery;
 
     internal sealed class GetUsersQueryHandler(
         ProjectManagementDbContext dbContext,
@@ -97,37 +99,38 @@ internal sealed class GetUsers : ISlice
 
     internal sealed class UsersQueryParameters : BaseQueryParameters;
 
-    internal sealed class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
+    internal sealed class UsersQueryParametersValidator : AbstractValidator<UsersQueryParameters>
     {
-        public GetUsersQueryValidator(SortMappingProvider sortMappingProvider, DataShapingService dataShapingService)
+        public UsersQueryParametersValidator(SortMappingProvider sortMappingProvider,
+            DataShapingService dataShapingService)
         {
-            RuleFor(x => x.Parameters.Sort)
+            RuleFor(x => x.Page)
+                .GreaterThan(0)
+                .WithMessage("Page must be greater than 0.");
+
+            RuleFor(x => x.PageSize)
+                .InclusiveBetween(1, 100)
+                .WithMessage("PageSize must be between 1 and 100.");
+
+            RuleFor(x => x.Sort)
                 .Custom((sort, context) =>
                 {
                     if (!sortMappingProvider.ValidateMappings<UserDto, User>(sort))
                     {
-                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Sort),
+                        context.AddFailure(nameof(context.InstanceToValidate.Sort),
                             $"The provided sort parameter isn't valid: '{sort}'");
                     }
                 });
 
-            RuleFor(x => x.Parameters.Fields)
+            RuleFor(x => x.Fields)
                 .Custom((fields, context) =>
                 {
                     if (!dataShapingService.Validate<UserDto>(fields))
                     {
-                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Fields),
+                        context.AddFailure(nameof(context.InstanceToValidate.Fields),
                             $"The provided data shaping fields aren't valid: '{fields}'");
                     }
                 });
-
-            RuleFor(x => x.Parameters.Page)
-                .GreaterThan(0)
-                .WithMessage("Page must be greater than 0.");
-
-            RuleFor(x => x.Parameters.PageSize)
-                .InclusiveBetween(1, 100)
-                .WithMessage("PageSize must be between 1 and 100.");
         }
     }
 

@@ -7,15 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder
     .AddApiServices()
-    .AddDatabase();
-
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    .AddDatabase()
+    .AddErrorHandling();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -24,10 +22,8 @@ if (app.Environment.IsDevelopment())
 
     await app.SeedInitialDataAsync();
 }
-else
-{
-    app.UseExceptionHandler();
-}
+
+app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();

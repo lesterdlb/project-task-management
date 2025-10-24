@@ -8,16 +8,24 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IServiceProvider s
     public async Task<TResponse> HandleAsync(TRequest input, Func<Task<TResponse>> next,
         CancellationToken cancellationToken = default)
     {
-        var validator = serviceProvider.GetService<IValidator<TRequest>>();
-        if (validator == null)
+        var services = serviceProvider.GetServices<IValidator<TRequest>>();
+        var validators = services as IValidator<TRequest>[] ?? [.. services];
+        if (!validators.Any())
         {
             return await next();
         }
 
-        var validationResult = await validator.ValidateAsync(input, cancellationToken);
-        if (!validationResult.IsValid)
+        var validationResults = await Task.WhenAll(
+            validators.Select(v => v.ValidateAsync(input, cancellationToken)));
+
+        var validationResult = validationResults
+            .SelectMany(r => r.Errors)
+            .Where(f => f is not null)
+            .ToList();
+
+        if (validationResult.Count != 0)
         {
-            throw new ValidationException(validationResult.Errors);
+            throw new ValidationException(validationResult);
         }
 
         return await next();
