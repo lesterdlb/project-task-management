@@ -1,15 +1,14 @@
-using System.Dynamic;
 using System.Globalization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Models;
+using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
-using ProjectManagement.Api.Features.Users;
 using ProjectManagement.Api.Mediator;
 using ProjectManagement.Api.Mediator.Behaviors;
 using ProjectManagement.Api.Middlewares;
@@ -36,25 +35,21 @@ public static class DependencyInjection
         builder.Services.AddSlices();
 
         builder.Services.AddScoped<IMediator, Mediator.Mediator>();
-        builder.Services
-            .AddScoped<IQueryHandler<GetUsers.GetUsersQuery, PaginationResult<ExpandoObject>>,
-                GetUsers.GetUsersQueryHandler>();
-        builder.Services
-            .AddScoped<IQueryHandler<GetUser.GetUserQuery, ExpandoObject?>,
-                GetUser.GetUserQueryHandler>();
+        RegisterUserQueryAndCommandHandlers(builder);
 
         builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly,
             includeInternalTypes: true);
 
-        builder.Services.AddTransient<SortMappingProvider>();
-        builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<GetUsers.UserDto, User>>(_ =>
-            GetUsers.UserMappings.SortMapping);
+        builder.Services.AddTransient<ISortMappingProvider, SortMappingProvider>();
+        builder.Services.AddSingleton<ISortMappingDefinition,
+            SortMappingDefinition<IUserDto, User>>(_ => UserMappings.UserSortMapping);
 
-        builder.Services.AddTransient<DataShapingService>();
+        builder.Services.AddTransient<IDataShapingService, DataShapingService>();
 
         return builder;
     }
+
 
     public static WebApplicationBuilder AddDatabase(this WebApplicationBuilder builder)
     {
@@ -73,8 +68,41 @@ public static class DependencyInjection
     {
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+        builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         return builder;
+    }
+
+
+    private static void RegisterUserQueryAndCommandHandlers(WebApplicationBuilder builder)
+    {
+        var assembly = typeof(DependencyInjection).Assembly;
+
+        // Register query handlers
+        var queryHandlerTypes = assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } &&
+                        t.GetInterfaces().Any(i => i.IsGenericType &&
+                                                   i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
+
+        foreach (var queryHandler in queryHandlerTypes)
+        {
+            var interfaceType = queryHandler.GetInterfaces()
+                .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>));
+            builder.Services.AddScoped(interfaceType, queryHandler);
+        }
+
+        // Register command handlers
+        var commandHandlerTypes = assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } &&
+                        t.GetInterfaces().Any(i => i.IsGenericType &&
+                                                   i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)));
+
+        foreach (var commandHandler in commandHandlerTypes)
+        {
+            var interfaceType = commandHandler.GetInterfaces()
+                .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>));
+            builder.Services.AddScoped(interfaceType, commandHandler);
+        }
     }
 }

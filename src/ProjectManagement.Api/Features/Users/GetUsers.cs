@@ -1,9 +1,9 @@
 using System.Dynamic;
-using System.Linq.Expressions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Filters;
+using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services;
@@ -18,27 +18,61 @@ internal sealed class GetUsers : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-                "api/users",
-                async (
-                    [AsParameters] UsersQueryParameters query,
-                    IMediator mediator,
-                    CancellationToken cancellationToken) =>
-                {
-                    var getUsersQuery = new GetUsersQuery(query);
-                    return Results.Ok(await mediator.SendQueryAsync<GetUsersQuery, PaginationResult<ExpandoObject>>(
-                        getUsersQuery,
-                        cancellationToken));
-                }
-            )
-            .AddEndpointFilter<ValidationFilter<UsersQueryParameters>>();
+            "api/users",
+            async (
+                [AsParameters] UsersQueryParameters query,
+                IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var getUsersQuery = new GetUsersQuery(query);
+                return Results.Ok(await mediator.SendQueryAsync<GetUsersQuery, PaginationResult<ExpandoObject>>(
+                    getUsersQuery,
+                    cancellationToken));
+            }
+        );
     }
 
     internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery<PaginationResult<ExpandoObject>>;
 
+    internal sealed class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
+    {
+        public GetUsersQueryValidator(ISortMappingProvider sortMappingProvider,
+            IDataShapingService dataShapingService)
+        {
+            RuleFor(x => x.Parameters.Page)
+                .GreaterThan(0)
+                .WithMessage("Page must be greater than 0.");
+
+            RuleFor(x => x.Parameters.PageSize)
+                .InclusiveBetween(1, 100)
+                .WithMessage("PageSize must be between 1 and 100.");
+
+            RuleFor(x => x.Parameters.Sort)
+                .Custom((sort, context) =>
+                {
+                    if (!sortMappingProvider.ValidateMappings<UserDto, User>(sort))
+                    {
+                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Sort),
+                            $"The provided sort parameter isn't valid: '{sort}'");
+                    }
+                });
+
+            RuleFor(x => x.Parameters.Fields)
+                .Custom((fields, context) =>
+                {
+                    if (!dataShapingService.Validate<UserDto>(fields))
+                    {
+                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Fields),
+                            $"The provided data shaping fields aren't valid: '{fields}'");
+                    }
+                });
+        }
+    }
+
     internal sealed class GetUsersQueryHandler(
         ProjectManagementDbContext dbContext,
-        SortMappingProvider sortMappingProvider,
-        DataShapingService dataShapingService
+        ISortMappingProvider sortMappingProvider,
+        IDataShapingService dataShapingService
     )
         : IQueryHandler<GetUsersQuery, PaginationResult<ExpandoObject>>
     {
@@ -47,7 +81,7 @@ internal sealed class GetUsers : ISlice
         {
             query.Parameters.Search ??= query.Parameters.Search?.Trim().ToLower();
 
-            var sortMappings = sortMappingProvider.GetMappings<UserDto, User>();
+            var sortMappings = sortMappingProvider.GetMappings<IUserDto, User>();
 
             var usersQuery = dbContext
                 .Users
@@ -55,7 +89,7 @@ internal sealed class GetUsers : ISlice
                             u.UserName.ToLower().Contains(query.Parameters.Search) ||
                             u.FullName.ToLower().Contains(query.Parameters.Search))
                 .ApplySort(query.Parameters.Sort, sortMappings)
-                .Select(UserProjections.ProjectToDto());
+                .Select(UserMappings.ProjectToUserDto<UserDto>());
 
             var totalCount = await usersQuery.CountAsync(cancellationToken);
             var users = await usersQuery
@@ -79,71 +113,11 @@ internal sealed class GetUsers : ISlice
 
     internal sealed class UsersQueryParameters : ExtendedQueryParameters;
 
-    internal sealed class UsersQueryParametersValidator : AbstractValidator<UsersQueryParameters>
+    private sealed class UserDto : IUserDto
     {
-        public UsersQueryParametersValidator(SortMappingProvider sortMappingProvider,
-            DataShapingService dataShapingService)
-        {
-            RuleFor(x => x.Page)
-                .GreaterThan(0)
-                .WithMessage("Page must be greater than 0.");
-
-            RuleFor(x => x.PageSize)
-                .InclusiveBetween(1, 100)
-                .WithMessage("PageSize must be between 1 and 100.");
-
-            RuleFor(x => x.Sort)
-                .Custom((sort, context) =>
-                {
-                    if (!sortMappingProvider.ValidateMappings<UserDto, User>(sort))
-                    {
-                        context.AddFailure(nameof(context.InstanceToValidate.Sort),
-                            $"The provided sort parameter isn't valid: '{sort}'");
-                    }
-                });
-
-            RuleFor(x => x.Fields)
-                .Custom((fields, context) =>
-                {
-                    if (!dataShapingService.Validate<UserDto>(fields))
-                    {
-                        context.AddFailure(nameof(context.InstanceToValidate.Fields),
-                            $"The provided data shaping fields aren't valid: '{fields}'");
-                    }
-                });
-        }
-    }
-
-    internal sealed class UserDto
-    {
-        public required string UserName { get; init; }
-        public required string Email { get; init; }
-        public required string FullName { get; init; }
-    }
-
-    private static class UserProjections
-    {
-        public static Expression<Func<User, UserDto>> ProjectToDto()
-        {
-            return h => new UserDto
-            {
-                UserName = h.UserName,
-                Email = h.Email,
-                FullName = h.FullName
-            };
-        }
-    }
-
-    internal sealed class UserMappings
-    {
-        public static readonly SortMappingDefinition<UserDto, User> SortMapping = new()
-        {
-            Mappings =
-            [
-                new SortMapping(nameof(UserDto.UserName), nameof(User.UserName)),
-                new SortMapping(nameof(UserDto.Email), nameof(User.Email)),
-                new SortMapping(nameof(UserDto.FullName), nameof(User.FullName))
-            ]
-        };
+        public Guid Id { get; init; }
+        public string UserName { get; init; }
+        public string Email { get; init; }
+        public string FullName { get; init; }
     }
 }

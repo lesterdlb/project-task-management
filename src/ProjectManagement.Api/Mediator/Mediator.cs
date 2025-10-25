@@ -3,7 +3,7 @@ namespace ProjectManagement.Api.Mediator;
 internal sealed class Mediator(IServiceProvider provider) : IMediator
 {
     public async Task<TResult> SendCommandAsync<TCommand, TResult>(TCommand command,
-        CancellationToken cancellationToken = default) where TCommand : ICommand
+        CancellationToken cancellationToken = default) where TCommand : ICommand<TResult>
     {
         ArgumentNullException.ThrowIfNull(command);
 

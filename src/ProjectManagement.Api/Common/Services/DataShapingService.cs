@@ -6,7 +6,7 @@ using ProjectManagement.Api.Common.Models;
 
 namespace ProjectManagement.Api.Common.Services;
 
-public sealed class DataShapingService // TODO : IDataShapingService
+public sealed class DataShapingService : IDataShapingService
 {
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> PropertiesCache = new();
 

@@ -19,7 +19,6 @@
         <PackageReference Include="System.Linq.Dynamic.Core" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Common\Models\Users\" />
         <Folder Include="Common\Persistence\Migrations\"/>
     </ItemGroup>
 </Project>
