@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
@@ -16,33 +18,35 @@ internal sealed class DeleteUser : ISlice
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
-                var deleted = await mediator.SendCommandAsync<DeleteUserCommand, bool>(
+                var result = await mediator.SendCommandAsync<DeleteUserCommand, Result>(
                     new DeleteUserCommand(userId),
                     cancellationToken);
 
-                return deleted ? Results.NoContent() : Results.NotFound();
+                return result.IsSuccess
+                    ? Results.NoContent()
+                    : result.ToProblemDetails();
             }
         );
     }
 
-    internal sealed record DeleteUserCommand(Guid Id) : ICommand<bool>;
+    internal sealed record DeleteUserCommand(Guid Id) : ICommand<Result>;
 
     internal sealed class DeleteUserCommandHandler(ProjectManagementDbContext dbContext)
-        : ICommandHandler<DeleteUserCommand, bool>
+        : ICommandHandler<DeleteUserCommand, Result>
     {
-        public async Task<bool> HandleAsync(DeleteUserCommand command, CancellationToken cancellationToken = default)
+        public async Task<Result> HandleAsync(DeleteUserCommand command, CancellationToken cancellationToken = default)
         {
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
+            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
 
             if (user is null)
             {
-                return false;
+                return Result.Failure(Error.NotFound);
             }
 
             dbContext.Users.Remove(user);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return true;
+            return Result.Success();
         }
     }
 }

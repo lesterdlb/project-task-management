@@ -1,8 +1,10 @@
 using System.Dynamic;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
@@ -25,14 +27,19 @@ internal sealed class GetUsers : ISlice
                 CancellationToken cancellationToken) =>
             {
                 var getUsersQuery = new GetUsersQuery(query);
-                return Results.Ok(await mediator.SendQueryAsync<GetUsersQuery, PaginationResult<ExpandoObject>>(
+                var result = await mediator.SendQueryAsync<GetUsersQuery, Result<PaginationResult<ExpandoObject>>>(
                     getUsersQuery,
-                    cancellationToken));
+                    cancellationToken);
+
+                return result.IsSuccess
+                    ? Results.Ok(result.Value)
+                    : result.ToProblemDetails();
             }
         );
     }
 
-    internal sealed record GetUsersQuery(UsersQueryParameters Parameters) : IQuery<PaginationResult<ExpandoObject>>;
+    internal sealed record GetUsersQuery(UsersQueryParameters Parameters)
+        : IQuery<Result<PaginationResult<ExpandoObject>>>;
 
     internal sealed class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
     {
@@ -74,20 +81,21 @@ internal sealed class GetUsers : ISlice
         ISortMappingProvider sortMappingProvider,
         IDataShapingService dataShapingService
     )
-        : IQueryHandler<GetUsersQuery, PaginationResult<ExpandoObject>>
+        : IQueryHandler<GetUsersQuery, Result<PaginationResult<ExpandoObject>>>
     {
-        public async Task<PaginationResult<ExpandoObject>> HandleAsync(GetUsersQuery query,
+        public async Task<Result<PaginationResult<ExpandoObject>>> HandleAsync(GetUsersQuery query,
             CancellationToken cancellationToken = default)
         {
-            query.Parameters.Search ??= query.Parameters.Search?.Trim().ToLower();
+            query.Parameters.Search = query.Parameters.Search?.Trim();
 
-            var sortMappings = sortMappingProvider.GetMappings<IUserDto, User>();
+            var sortMappings = sortMappingProvider.GetMappings<UserDto, User>();
 
             var usersQuery = dbContext
                 .Users
                 .Where(u => query.Parameters.Search == null ||
-                            u.UserName.ToLower().Contains(query.Parameters.Search) ||
-                            u.FullName.ToLower().Contains(query.Parameters.Search))
+                            EF.Functions.ILike(u.UserName, $"%{query.Parameters.Search}%") ||
+                            EF.Functions.ILike(u.FullName, $"%{query.Parameters.Search}%") ||
+                            EF.Functions.ILike(u.Email, $"%{query.Parameters.Search}%"))
                 .ApplySort(query.Parameters.Sort, sortMappings)
                 .Select(UserMappings.ProjectToUserDto<UserDto>());
 
@@ -112,12 +120,4 @@ internal sealed class GetUsers : ISlice
     }
 
     internal sealed class UsersQueryParameters : ExtendedQueryParameters;
-
-    private sealed class UserDto : IUserDto
-    {
-        public Guid Id { get; init; }
-        public string UserName { get; init; }
-        public string Email { get; init; }
-        public string FullName { get; init; }
-    }
 }

@@ -43,7 +43,7 @@ public static class DependencyInjection
 
         builder.Services.AddTransient<ISortMappingProvider, SortMappingProvider>();
         builder.Services.AddSingleton<ISortMappingDefinition,
-            SortMappingDefinition<IUserDto, User>>(_ => UserMappings.UserSortMapping);
+            SortMappingDefinition<UserDto, User>>(_ => UserMappings.UserSortMapping);
 
         builder.Services.AddTransient<IDataShapingService, DataShapingService>();
 

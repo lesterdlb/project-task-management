@@ -1,7 +1,9 @@
 using System.Dynamic;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
@@ -23,16 +25,18 @@ internal sealed class GetUser : ISlice
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
-                var user = await mediator.SendQueryAsync<GetUserQuery, ExpandoObject?>(
+                var result = await mediator.SendQueryAsync<GetUserQuery, Result<ExpandoObject?>>(
                     new GetUserQuery(userId, query),
                     cancellationToken);
 
-                return user is null ? Results.NotFound() : Results.Ok(user);
+                return result.IsSuccess
+                    ? Results.Ok(result.Value)
+                    : result.ToProblemDetails();
             }
         );
     }
 
-    internal sealed record GetUserQuery(Guid Id, UserQueryParameters Parameters) : IQuery<ExpandoObject?>;
+    internal sealed record GetUserQuery(Guid Id, UserQueryParameters Parameters) : IQuery<Result<ExpandoObject?>>;
 
     internal sealed class GetUserQueryValidator : AbstractValidator<GetUserQuery>
     {
@@ -54,9 +58,10 @@ internal sealed class GetUser : ISlice
         ProjectManagementDbContext dbContext,
         IDataShapingService dataShapingService
     )
-        : IQueryHandler<GetUserQuery, ExpandoObject?>
+        : IQueryHandler<GetUserQuery, Result<ExpandoObject?>>
     {
-        public async Task<ExpandoObject?> HandleAsync(GetUserQuery query, CancellationToken cancellationToken = default)
+        public async Task<Result<ExpandoObject?>> HandleAsync(GetUserQuery query,
+            CancellationToken cancellationToken = default)
         {
             var user = await dbContext
                 .Users
@@ -65,18 +70,10 @@ internal sealed class GetUser : ISlice
                 .SingleOrDefaultAsync(cancellationToken);
 
             return user is null
-                ? null
+                ? Result.Failure<ExpandoObject?>(Error.NotFound)
                 : dataShapingService.ShapeData(user, query.Parameters.Fields);
         }
     }
 
     internal sealed class UserQueryParameters : BaseQueryParameters;
-
-    private sealed class UserDto : IUserDto
-    {
-        public Guid Id { get; init; }
-        public string UserName { get; init; }
-        public string Email { get; init; }
-        public string FullName { get; init; }
-    }
 }

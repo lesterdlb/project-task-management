@@ -23,18 +23,20 @@ public sealed class ProjectManagementDbContext(DbContextOptions<ProjectManagemen
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
     {
+        var currentUserId = Guid.NewGuid(); // TODO: Get current user id
+
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedBy = Guid.NewGuid(); // TODO
+                    entry.Entity.CreatedBy = currentUserId;
                     entry.Entity.LastModifiedBy = null;
                     entry.Entity.CreatedAtUtc = DateTime.UtcNow;
                     entry.Entity.UpdatedAtUtc = null;
                     break;
                 case EntityState.Modified:
-                    entry.Entity.LastModifiedBy = Guid.NewGuid(); // TODO
+                    entry.Entity.LastModifiedBy = currentUserId;
                     entry.Entity.UpdatedAtUtc = DateTime.UtcNow;
                     break;
             }

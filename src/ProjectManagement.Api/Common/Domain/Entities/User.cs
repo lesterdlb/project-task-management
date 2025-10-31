@@ -4,9 +4,9 @@ namespace ProjectManagement.Api.Common.Domain.Entities;
 
 public sealed class User : Entity
 {
-    public required string UserName { get; init; }
-    public required string Email { get; init; }
-    public required string FullName { get; init; }
+    public required string UserName { get; set; }
+    public required string Email { get; set; }
+    public required string FullName { get; set; }
     public string? AvatarUrl { get; init; }
     public UserRole Role { get; init; }
 

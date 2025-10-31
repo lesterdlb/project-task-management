@@ -12,33 +12,34 @@ using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
 
-internal sealed class CreateUser : ISlice
+internal sealed class UpdateUser : ISlice
 {
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
-        endpointRouteBuilder.MapPost(
-            "api/users",
+        endpointRouteBuilder.MapPut(
+            "api/users/{userId:guid}",
             async (
-                CreateUserDto createUserDto,
+                Guid userId,
+                UpdateUserDto updateUserDto,
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
-                var result = await mediator.SendCommandAsync<CreateUserCommand, Result<UserDto>>(
-                    new CreateUserCommand(createUserDto),
+                var result = await mediator.SendCommandAsync<UpdateUserCommand, Result>(
+                    new UpdateUserCommand(userId, updateUserDto),
                     cancellationToken);
 
                 return result.IsSuccess
-                    ? Results.Created($"api/users/{result.Value.Id}", result.Value)
+                    ? Results.NoContent()
                     : result.ToProblemDetails();
             }
         );
     }
 
-    internal sealed record CreateUserCommand(CreateUserDto Dto) : ICommand<Result<UserDto>>;
+    internal sealed record UpdateUserCommand(Guid Id, UpdateUserDto Dto) : ICommand<Result>;
 
-    internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+    internal sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
     {
-        public CreateUserCommandValidator()
+        public UpdateUserCommandValidator()
         {
             RuleFor(c => c.Dto.UserName).ValidateUserName();
             RuleFor(c => c.Dto.Email).ValidateEmail();
@@ -46,17 +47,22 @@ internal sealed class CreateUser : ISlice
         }
     }
 
-    internal sealed class CreateUserCommandHandler(ProjectManagementDbContext dbContext)
-        : ICommandHandler<CreateUserCommand, Result<UserDto>>
+    internal sealed class UpdateUserCommandHandler(ProjectManagementDbContext dbContext)
+        : ICommandHandler<UpdateUserCommand, Result>
     {
-        public async Task<Result<UserDto>> HandleAsync(CreateUserCommand command,
-            CancellationToken cancellationToken = default)
+        public async Task<Result> HandleAsync(UpdateUserCommand command, CancellationToken cancellationToken = default)
         {
-            var user = command.Dto.ToEntity();
+            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
+
+            if (user is null)
+            {
+                return Result.Failure(Error.NotFound);
+            }
+
+            user.UpdateFromDto(command.Dto);
 
             try
             {
-                dbContext.Users.Add(user);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
@@ -70,11 +76,11 @@ internal sealed class CreateUser : ISlice
                 throw;
             }
 
-            return user.ToUserDto<UserDto>();
+            return Result.Success();
         }
     }
 
-    public sealed class CreateUserDto
+    public sealed class UpdateUserDto
     {
         public string UserName { get; init; }
         public string Email { get; init; }

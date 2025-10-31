@@ -9,7 +9,7 @@ namespace ProjectManagement.Api.Common.Mappings;
 
 internal static class UserMappings
 {
-    public static Expression<Func<User, TDto>> ProjectToUserDto<TDto>() where TDto : IUserDto, new()
+    public static Expression<Func<User, TDto>> ProjectToUserDto<TDto>() where TDto : UserDto, new()
     {
         return u => new TDto
         {
@@ -20,7 +20,7 @@ internal static class UserMappings
         };
     }
 
-    public static TDto ToUserDto<TDto>(this User user) where TDto : IUserDto, new()
+    public static TDto ToUserDto<TDto>(this User user) where TDto : UserDto, new()
     {
         return new TDto
         {
@@ -42,13 +42,20 @@ internal static class UserMappings
         };
     }
 
-    public static readonly SortMappingDefinition<IUserDto, User> UserSortMapping = new()
+    public static void UpdateFromDto(this User user, UpdateUser.UpdateUserDto dto)
+    {
+        user.UserName = dto.UserName;
+        user.Email = dto.Email;
+        user.FullName = dto.FullName;
+    }
+
+    public static readonly SortMappingDefinition<UserDto, User> UserSortMapping = new()
     {
         Mappings =
         [
-            new SortMapping(nameof(IUserDto.UserName), nameof(User.UserName)),
-            new SortMapping(nameof(IUserDto.Email), nameof(User.Email)),
-            new SortMapping(nameof(IUserDto.FullName), nameof(User.FullName))
+            new SortMapping(nameof(UserDto.UserName), nameof(User.UserName)),
+            new SortMapping(nameof(UserDto.Email), nameof(User.Email)),
+            new SortMapping(nameof(UserDto.FullName), nameof(User.FullName))
         ]
     };
 }
