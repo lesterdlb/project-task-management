@@ -75,6 +75,10 @@ internal sealed class UpdateUser : ISlice
 
                 throw;
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(Error.Conflict);
+            }
 
             return Result.Success();
         }

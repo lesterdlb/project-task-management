@@ -21,5 +21,8 @@ public abstract class EntityConfiguration<TEntity> : IEntityTypeConfiguration<TE
 
         builder.Property(e => e.CreatedAtUtc)
             .IsRequired();
+
+        builder.Property(e => e.Version)
+            .IsRowVersion();
     }
 }
