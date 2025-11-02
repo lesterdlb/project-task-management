@@ -1,12 +1,17 @@
 using System.Globalization;
+using System.Text;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services;
+using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
@@ -50,7 +55,6 @@ public static class DependencyInjection
         return builder;
     }
 
-
     public static WebApplicationBuilder AddDatabase(this WebApplicationBuilder builder)
     {
         builder.Services.AddDbContext<ProjectManagementDbContext>(options =>
@@ -64,6 +68,56 @@ public static class DependencyInjection
         return builder;
     }
 
+    public static WebApplicationBuilder AddAuthenticationServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+        builder.Services.AddScoped<IJwtService, JwtService>();
+
+        builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequiredLength = 8;
+
+                options.SignIn.RequireConfirmedEmail = true;
+
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddEntityFrameworkStores<ProjectManagementDbContext>()
+            .AddDefaultTokenProviders();
+
+        var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
+                         ?? throw new InvalidOperationException("JWT configuration is missing");
+
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidAudience = jwtOptions.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
+                };
+            });
+
+        builder.Services.AddAuthorization();
+
+        return builder;
+    }
+
     public static WebApplicationBuilder AddErrorHandling(this WebApplicationBuilder builder)
     {
         builder.Services.AddProblemDetails();
@@ -73,7 +127,6 @@ public static class DependencyInjection
 
         return builder;
     }
-
 
     private static void RegisterUserQueryAndCommandHandlers(WebApplicationBuilder builder)
     {

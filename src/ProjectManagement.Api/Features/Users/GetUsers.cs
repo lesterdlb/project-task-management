@@ -93,9 +93,9 @@ internal sealed class GetUsers : ISlice
             var usersQuery = dbContext
                 .Users
                 .Where(u => query.Parameters.Search == null ||
-                            EF.Functions.ILike(u.UserName, $"%{query.Parameters.Search}%") ||
+                            EF.Functions.ILike(u.UserName!, $"%{query.Parameters.Search}%") ||
                             EF.Functions.ILike(u.FullName, $"%{query.Parameters.Search}%") ||
-                            EF.Functions.ILike(u.Email, $"%{query.Parameters.Search}%"))
+                            EF.Functions.ILike(u.Email!, $"%{query.Parameters.Search}%"))
                 .ApplySort(query.Parameters.Sort, sortMappings)
                 .Select(UserMappings.ProjectToUserDto<UserDto>());
 

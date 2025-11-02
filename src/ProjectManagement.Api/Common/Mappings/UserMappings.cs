@@ -14,8 +14,8 @@ internal static class UserMappings
         return u => new TDto
         {
             Id = u.Id,
-            UserName = u.UserName,
-            Email = u.Email,
+            UserName = u.UserName!,
+            Email = u.Email!,
             FullName = u.FullName
         };
     }
@@ -25,8 +25,8 @@ internal static class UserMappings
         return new TDto
         {
             Id = user.Id,
-            UserName = user.UserName,
-            Email = user.Email,
+            UserName = user.UserName!,
+            Email = user.Email!,
             FullName = user.FullName
         };
     }

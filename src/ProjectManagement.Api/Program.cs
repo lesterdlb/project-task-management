@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder
     .AddApiServices()
     .AddDatabase()
+    .AddAuthenticationServices()
     .AddErrorHandling();
 
 var app = builder.Build();
@@ -28,6 +29,9 @@ app.UseExceptionHandler();
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseStatusCodePages();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapSliceEndpoints();
 
