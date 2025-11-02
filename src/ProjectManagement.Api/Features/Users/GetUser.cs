@@ -18,22 +18,23 @@ internal sealed class GetUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-            "api/users/{userId:guid}",
-            async (
-                Guid userId,
-                [AsParameters] UserQueryParameters query,
-                IMediator mediator,
-                CancellationToken cancellationToken) =>
-            {
-                var result = await mediator.SendQueryAsync<GetUserQuery, Result<ExpandoObject?>>(
-                    new GetUserQuery(userId, query),
-                    cancellationToken);
+                "api/users/{userId:guid}",
+                async (
+                    Guid userId,
+                    [AsParameters] UserQueryParameters query,
+                    IMediator mediator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var result = await mediator.SendQueryAsync<GetUserQuery, Result<ExpandoObject?>>(
+                        new GetUserQuery(userId, query),
+                        cancellationToken);
 
-                return result.IsSuccess
-                    ? Results.Ok(result.Value)
-                    : result.ToProblemDetails();
-            }
-        );
+                    return result.IsSuccess
+                        ? Results.Ok(result.Value)
+                        : result.ToProblemDetails();
+                }
+            )
+            .WithTags(nameof(Users));
     }
 
     internal sealed record GetUserQuery(Guid Id, UserQueryParameters Parameters) : IQuery<Result<ExpandoObject?>>;

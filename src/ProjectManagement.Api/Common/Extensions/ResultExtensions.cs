@@ -16,27 +16,37 @@ public static class ResultExtensions
             throw new InvalidOperationException("Cannot convert successful result to problem details");
         }
 
-        return result.Error.Code switch
+        return result.Error.Category switch
         {
-            nameof(Error.NullValue) => Results.Problem(
+            ErrorCategory.BadRequest => Results.Problem(
                 detail: result.Error.Message,
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Bad Request"),
 
-            nameof(Error.NotFound) => Results.Problem(
+            ErrorCategory.Unauthorized => Results.Problem(
+                detail: result.Error.Message,
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized"),
+
+            ErrorCategory.Forbidden => Results.Problem(
+                detail: result.Error.Message,
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden"),
+
+            ErrorCategory.NotFound => Results.Problem(
                 detail: result.Error.Message,
                 statusCode: StatusCodes.Status404NotFound,
                 title: "Not Found"),
 
-            nameof(Error.Conflict) => Results.Problem(
+            ErrorCategory.Conflict => Results.Problem(
                 detail: result.Error.Message,
                 statusCode: StatusCodes.Status409Conflict,
                 title: "Conflict"),
 
             _ => Results.Problem(
                 detail: result.Error.Message,
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Bad Request")
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Internal Server Error")
         };
     }
 }

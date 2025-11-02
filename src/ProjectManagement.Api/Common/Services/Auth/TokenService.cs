@@ -7,9 +7,9 @@ using ProjectManagement.Api.Common.Domain.Entities;
 
 namespace ProjectManagement.Api.Common.Services.Auth;
 
-public class JwtService(IOptions<JwtOptions> jwtOptions) : IJwtService
+public class TokenService(IOptions<TokenOptions> jwtOptions) : ITokenService
 {
-    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
+    private readonly TokenOptions _tokenOptions = jwtOptions.Value;
 
     public string GenerateToken(User user, IList<string> roles)
     {
@@ -24,14 +24,14 @@ public class JwtService(IOptions<JwtOptions> jwtOptions) : IJwtService
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenOptions.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _jwtOptions.Issuer,
-            audience: _jwtOptions.Audience,
+            issuer: _tokenOptions.Issuer,
+            audience: _tokenOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes),
+            expires: DateTime.UtcNow.AddMinutes(_tokenOptions.ExpirationMinutes),
             signingCredentials: credentials
         );
 
@@ -39,7 +39,7 @@ public class JwtService(IOptions<JwtOptions> jwtOptions) : IJwtService
     }
 }
 
-public sealed class JwtOptions
+public sealed class TokenOptions
 {
     public required string SecretKey { get; init; }
     public required string Issuer { get; init; }

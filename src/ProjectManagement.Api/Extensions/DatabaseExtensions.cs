@@ -84,13 +84,13 @@ public static class DatabaseExtensions
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        var result = await userManager.CreateAsync(adminUser, "Admin@123");
+        var result = await userManager.CreateAsync(adminUser, "P@ssW0rd1!");
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, nameof(UserRole.Admin));
         }
 
-        result = await userManager.CreateAsync(memberUser, "Member@123");
+        result = await userManager.CreateAsync(memberUser, "P@ssW0rd1!");
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(memberUser, nameof(UserRole.Member));

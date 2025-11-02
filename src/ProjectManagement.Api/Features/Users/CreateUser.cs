@@ -17,21 +17,22 @@ internal sealed class CreateUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-            "api/users",
-            async (
-                CreateUserDto createUserDto,
-                IMediator mediator,
-                CancellationToken cancellationToken) =>
-            {
-                var result = await mediator.SendCommandAsync<CreateUserCommand, Result<UserDto>>(
-                    new CreateUserCommand(createUserDto),
-                    cancellationToken);
+                "api/users",
+                async (
+                    CreateUserDto createUserDto,
+                    IMediator mediator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var result = await mediator.SendCommandAsync<CreateUserCommand, Result<UserDto>>(
+                        new CreateUserCommand(createUserDto),
+                        cancellationToken);
 
-                return result.IsSuccess
-                    ? Results.Created($"api/users/{result.Value.Id}", result.Value)
-                    : result.ToProblemDetails();
-            }
-        );
+                    return result.IsSuccess
+                        ? Results.Created($"api/users/{result.Value.Id}", result.Value)
+                        : result.ToProblemDetails();
+                }
+            )
+            .WithTags(nameof(Users));
     }
 
     internal sealed record CreateUserCommand(CreateUserDto Dto) : ICommand<Result<UserDto>>;

@@ -12,12 +12,14 @@ using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services;
 using ProjectManagement.Api.Common.Services.Auth;
+using ProjectManagement.Api.Common.Services.Email;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
 using ProjectManagement.Api.Mediator.Behaviors;
 using ProjectManagement.Api.Middlewares;
 using Serilog;
+using TokenOptions = ProjectManagement.Api.Common.Services.Auth.TokenOptions;
 
 namespace ProjectManagement.Api;
 
@@ -52,6 +54,8 @@ public static class DependencyInjection
 
         builder.Services.AddTransient<IDataShapingService, DataShapingService>();
 
+        builder.Services.AddScoped<IEmailService, EmailService>();
+
         return builder;
     }
 
@@ -70,11 +74,12 @@ public static class DependencyInjection
 
     public static WebApplicationBuilder AddAuthenticationServices(this WebApplicationBuilder builder)
     {
-        builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+        var tokenSection = builder.Configuration.GetSection(nameof(TokenOptions));
+        builder.Services.Configure<TokenOptions>(tokenSection);
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<ITokenService, TokenService>();
 
         builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
             {
@@ -91,8 +96,8 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ProjectManagementDbContext>()
             .AddDefaultTokenProviders();
 
-        var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
-                         ?? throw new InvalidOperationException("JWT configuration is missing");
+        var jwtOptions = tokenSection.Get<TokenOptions>() ??
+                         throw new InvalidOperationException("JWT configuration is missing");
 
         builder.Services.AddAuthentication(options =>
             {
