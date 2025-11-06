@@ -4,5 +4,5 @@ namespace ProjectManagement.Api.Common.Services.Auth;
 
 public interface ITokenService
 {
-    string GenerateToken(User user, IList<string> roles);
+    Task<string> GenerateToken(User user, IList<string> roles);
 }

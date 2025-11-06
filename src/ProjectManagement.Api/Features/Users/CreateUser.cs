@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
@@ -32,7 +33,8 @@ internal sealed class CreateUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users));
+            .WithTags(nameof(Users))
+            .RequirePermissions(Permissions.Users.Write);
     }
 
     internal sealed record CreateUserCommand(CreateUserDto Dto) : ICommand<Result<UserDto>>;

@@ -1,7 +1,7 @@
 using System.Dynamic;
 using ProjectManagement.Api.Common.Models;
 
-namespace ProjectManagement.Api.Common.Services;
+namespace ProjectManagement.Api.Common.Services.DataShaping;
 
 public interface IDataShapingService
 {

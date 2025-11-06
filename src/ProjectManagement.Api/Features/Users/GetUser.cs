@@ -1,13 +1,14 @@
 using System.Dynamic;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
-using ProjectManagement.Api.Common.Services;
+using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
 
@@ -34,7 +35,8 @@ internal sealed class GetUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users));
+            .WithTags(nameof(Users))
+            .RequirePermissions(Permissions.Users.Read);
     }
 
     internal sealed record GetUserQuery(Guid Id, UserQueryParameters Parameters) : IQuery<Result<ExpandoObject?>>;

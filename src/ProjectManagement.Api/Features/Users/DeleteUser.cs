@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Persistence;
@@ -27,7 +28,8 @@ internal sealed class DeleteUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users));
+            .WithTags(nameof(Users))
+            .RequirePermissions(Permissions.Users.Delete);
     }
 
     internal sealed record DeleteUserCommand(Guid Id) : ICommand<Result>;

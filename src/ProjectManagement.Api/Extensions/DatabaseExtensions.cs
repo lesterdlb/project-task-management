@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.Persistence;
@@ -48,9 +50,18 @@ public static class DatabaseExtensions
     {
         foreach (var role in Enum.GetValues<UserRole>())
         {
-            if (!await roleManager.RoleExistsAsync(role.ToString()))
+            var existingRole = await roleManager.FindByNameAsync(role.ToString());
+            if (existingRole is not null)
             {
-                await roleManager.CreateAsync(new IdentityRole<Guid>(role.ToString()));
+                continue;
+            }
+
+            existingRole = new IdentityRole<Guid>(role.ToString());
+            await roleManager.CreateAsync(existingRole);
+
+            foreach (var permission in PermissionProvider.GetPermissionsForRole(role))
+            {
+                await roleManager.AddClaimAsync(existingRole, new Claim(Permissions.ClaimType, permission));
             }
         }
     }
@@ -84,7 +95,7 @@ public static class DatabaseExtensions
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        var result = await userManager.CreateAsync(adminUser, "P@ssW0rd1!");
+         var result = await userManager.CreateAsync(adminUser, "P@ssW0rd1!");
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, nameof(UserRole.Admin));

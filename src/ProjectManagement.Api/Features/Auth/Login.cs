@@ -80,7 +80,7 @@ internal sealed class Login : ISlice
             }
 
             var roles = await userManager.GetRolesAsync(user);
-            var token = tokenService.GenerateToken(user, roles);
+            var token = await tokenService.GenerateToken(user, roles);
 
             return new LoginResponse(token, user.Email!, user.FullName);
         }

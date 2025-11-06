@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using ProjectManagement.Api.Common.Models;
 
-namespace ProjectManagement.Api.Common.Services;
+namespace ProjectManagement.Api.Common.Services.DataShaping;
 
 public sealed class DataShapingService : IDataShapingService
 {

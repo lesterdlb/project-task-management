@@ -1,17 +1,20 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Entities;
 
 namespace ProjectManagement.Api.Common.Services.Auth;
 
-public class TokenService(IOptions<TokenOptions> jwtOptions) : ITokenService
+public class TokenService(IOptions<TokenOptions> jwtOptions, RoleManager<IdentityRole<Guid>> roleManager)
+    : ITokenService
 {
     private readonly TokenOptions _tokenOptions = jwtOptions.Value;
 
-    public string GenerateToken(User user, IList<string> roles)
+    public async Task<string> GenerateToken(User user, IList<string> roles)
     {
         var claims = new List<Claim>
         {
@@ -23,6 +26,24 @@ public class TokenService(IOptions<TokenOptions> jwtOptions) : ITokenService
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+        var permissions = (await Task.WhenAll(
+                roles.Select(async roleName =>
+                {
+                    var role = await roleManager.FindByNameAsync(roleName);
+                    if (role is null)
+                    {
+                        return [];
+                    }
+
+                    var roleClaims = await roleManager.GetClaimsAsync(role);
+                    return roleClaims.Where(c => c.Type == Permissions.ClaimType);
+                })))
+            .SelectMany(roleClaims => roleClaims)
+            .Select(roleClaim => roleClaim.Value)
+            .ToHashSet();
+
+        claims.AddRange(permissions.Select(permission => new Claim(Permissions.ClaimType, permission)));
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenOptions.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
