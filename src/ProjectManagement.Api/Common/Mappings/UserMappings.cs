@@ -31,17 +31,6 @@ internal static class UserMappings
         };
     }
 
-    public static User ToEntity(this CreateUser.CreateUserDto user)
-    {
-        return new User
-        {
-            UserName = user.UserName,
-            Email = user.Email,
-            FullName = user.FullName,
-            Role = UserRole.Member // Temporarily set to member
-        };
-    }
-
     public static void UpdateFromDto(this User user, UpdateUser.UpdateUserDto dto)
     {
         user.UserName = dto.UserName;

@@ -39,4 +39,10 @@ public record Error(string Code, string Message, ErrorCategory Category = ErrorC
         public static Error EmailConfirmationFailed(string details) =>
             new("Auth.EmailConfirmationFailed", $"Email confirmation failed: {details}");
     }
+
+    public static class User
+    {
+        public static Error CreateFailed(string details) =>
+            new("User.CreateFailed", $"User creation failed: {details}");
+    }
 }

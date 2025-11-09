@@ -12,7 +12,7 @@ public sealed class Project : Entity
     public Priority Priority { get; init; }
 
     public Guid OwnerId { get; init; }
-    public required User Owner { get; init; }
+    public User Owner { get; init; }
     public ICollection<ProjectMember> Members { get; init; } = [];
     public ICollection<ProjectTask> Tasks { get; init; } = [];
     public ICollection<Label> Labels { get; init; } = [];

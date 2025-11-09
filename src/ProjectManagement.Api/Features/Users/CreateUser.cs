@@ -1,12 +1,13 @@
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using Microsoft.AspNetCore.Identity;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Domain.Entities;
+using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
-using ProjectManagement.Api.Common.Persistence;
+using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Common.Validators;
 using ProjectManagement.Api.Mediator;
@@ -49,28 +50,46 @@ internal sealed class CreateUser : ISlice
         }
     }
 
-    internal sealed class CreateUserCommandHandler(ProjectManagementDbContext dbContext)
+    internal sealed class CreateUserCommandHandler(
+        ICurrentUserService currentUserService,
+        UserManager<User> userManager
+    )
         : ICommandHandler<CreateUserCommand, Result<UserDto>>
     {
         public async Task<Result<UserDto>> HandleAsync(CreateUserCommand command,
             CancellationToken cancellationToken = default)
         {
-            var user = command.Dto.ToEntity();
-
-            try
+            var userId = currentUserService.UserId;
+            if (userId is null)
             {
-                dbContext.Users.Add(user);
-                await dbContext.SaveChangesAsync(cancellationToken);
+                return Result.Failure<UserDto>(Error.Unauthorized);
             }
-            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
-            {
-                if (pgEx.ConstraintName?.Contains("email") is true ||
-                    pgEx.ConstraintName?.Contains("user_name") is true)
-                {
-                    return Result.Failure<UserDto>(Error.Conflict);
-                }
 
-                throw;
+            var user = new User
+            {
+                UserName = command.Dto.UserName,
+                Email = command.Dto.Email,
+                FullName = command.Dto.FullName,
+                Role = UserRole.Member,
+                EmailConfirmed = true,
+                CreatedBy = userId.Value,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            const string tempPassword = "P@ssW0rd1!";
+            var result = await userManager.CreateAsync(user, tempPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return Result.Failure<UserDto>(Error.User.CreateFailed(errors));
+            }
+
+            var roleResult = await userManager.AddToRoleAsync(user, user.Role.ToString());
+            if (!roleResult.Succeeded)
+            {
+                var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                return Result.Failure<UserDto>(Error.User.CreateFailed(errors));
             }
 
             return user.ToUserDto<UserDto>();

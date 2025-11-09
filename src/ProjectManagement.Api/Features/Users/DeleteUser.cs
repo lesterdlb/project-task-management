@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Extensions;
-using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
 
@@ -34,20 +34,18 @@ internal sealed class DeleteUser : ISlice
 
     internal sealed record DeleteUserCommand(Guid Id) : ICommand<Result>;
 
-    internal sealed class DeleteUserCommandHandler(ProjectManagementDbContext dbContext)
+    internal sealed class DeleteUserCommandHandler(UserManager<User> userManager)
         : ICommandHandler<DeleteUserCommand, Result>
     {
         public async Task<Result> HandleAsync(DeleteUserCommand command, CancellationToken cancellationToken = default)
         {
-            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
-
+            var user = await userManager.FindByIdAsync(command.Id.ToString());
             if (user is null)
             {
                 return Result.Failure(Error.NotFound);
             }
 
-            dbContext.Users.Remove(user);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await userManager.DeleteAsync(user);
 
             return Result.Success();
         }

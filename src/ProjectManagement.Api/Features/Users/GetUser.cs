@@ -1,13 +1,14 @@
 using System.Dynamic;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
-using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Mediator;
@@ -58,7 +59,7 @@ internal sealed class GetUser : ISlice
     }
 
     internal sealed class GetUserQueryHandler(
-        ProjectManagementDbContext dbContext,
+        UserManager<User> userManager,
         IDataShapingService dataShapingService
     )
         : IQueryHandler<GetUserQuery, Result<ExpandoObject?>>
@@ -66,8 +67,7 @@ internal sealed class GetUser : ISlice
         public async Task<Result<ExpandoObject?>> HandleAsync(GetUserQuery query,
             CancellationToken cancellationToken = default)
         {
-            var user = await dbContext
-                .Users
+            var user = await userManager.Users
                 .Where(u => u.Id == query.Id)
                 .Select(UserMappings.ProjectToUserDto<UserDto>())
                 .SingleOrDefaultAsync(cancellationToken);

@@ -27,6 +27,7 @@ public static class PermissionProvider
         permissions.AddRange(GetGuestPermissions()); // Inherit all Guest permissions
 
         permissions.AddRange([
+            Permissions.Users.Read,
             Permissions.Projects.Read,
             Permissions.Projects.Write,
             Permissions.Tasks.Read,

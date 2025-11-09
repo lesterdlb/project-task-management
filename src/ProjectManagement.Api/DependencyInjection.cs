@@ -1,12 +1,15 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.Api.Common.Domain.Entities;
+using ProjectManagement.Api.Common.DTOs.Project;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
@@ -36,6 +39,15 @@ public static class DependencyInjection
                 .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
         }, writeToProviders: true);
 
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+        builder.Services.Configure<JsonOptions>(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen();
 
@@ -51,6 +63,8 @@ public static class DependencyInjection
         builder.Services.AddTransient<ISortMappingProvider, SortMappingProvider>();
         builder.Services.AddSingleton<ISortMappingDefinition,
             SortMappingDefinition<UserDto, User>>(_ => UserMappings.UserSortMapping);
+        builder.Services.AddSingleton<ISortMappingDefinition,
+            SortMappingDefinition<ProjectDto, Project>>(_ => ProjectMappings.ProjectSortMapping);
 
         builder.Services.AddTransient<IDataShapingService, DataShapingService>();
 
@@ -128,6 +142,7 @@ public static class DependencyInjection
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
         builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
+        builder.Services.AddExceptionHandler<JsonExceptionHandler>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         return builder;

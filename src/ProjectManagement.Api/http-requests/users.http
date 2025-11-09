@@ -1,0 +1,42 @@
+### Get All Users (Member)
+GET {{HostAddress}}/api/users
+Authorization: Bearer {{member_token}}
+
+### Get All Users (Admin)
+GET {{HostAddress}}/api/users?page=1&pageSize=10
+Authorization: Bearer {{admin_token}}
+
+### Get User by ID
+GET {{HostAddress}}/api/users/{{user_id}}
+Authorization: Bearer {{admin_token}}
+
+### Create User (Admin only)
+POST {{HostAddress}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "userName": "newuser",
+  "email": "newuser@example.com",
+  "fullName": "New User"
+}
+
+> {%
+    client.global.set("user_id", response.body.id);
+%}
+
+### Update User (Admin only)
+PUT {{HostAddress}}/api/users/{{user_id}}
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "userName": "updateduser",
+  "email": "updated@example.com",
+  "fullName": "Updated User"
+}
+
+### Delete User (Admin only)
+DELETE {{HostAddress}}/api/users/{{user_id}}
+Authorization: Bearer {{admin_token}}
+

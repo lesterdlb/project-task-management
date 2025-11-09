@@ -1,12 +1,15 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Domain.Entities;
+using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
-using ProjectManagement.Api.Common.Persistence;
+using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Common.Validators;
 using ProjectManagement.Api.Mediator;
@@ -50,23 +53,36 @@ internal sealed class UpdateUser : ISlice
         }
     }
 
-    internal sealed class UpdateUserCommandHandler(ProjectManagementDbContext dbContext)
+    internal sealed class UpdateUserCommandHandler(
+        UserManager<User> userManager,
+        ICurrentUserService currentUserService)
         : ICommandHandler<UpdateUserCommand, Result>
     {
         public async Task<Result> HandleAsync(UpdateUserCommand command, CancellationToken cancellationToken = default)
         {
-            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == command.Id, cancellationToken);
+            var currentUserId = currentUserService.UserId;
+            if (currentUserId is null)
+            {
+                return Result.Failure(Error.Unauthorized);
+            }
+
+            var user = await userManager.FindByIdAsync(command.Id.ToString());
 
             if (user is null)
             {
                 return Result.Failure(Error.NotFound);
             }
 
+            if (user.Id != currentUserId && !currentUserService.IsInRole(nameof(UserRole.Admin)))
+            {
+                return Result.Failure(Error.Forbidden);
+            }
+
             user.UpdateFromDto(command.Dto);
 
             try
             {
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await userManager.UpdateAsync(user);
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
             {

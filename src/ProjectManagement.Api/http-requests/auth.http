@@ -1,0 +1,65 @@
+### Register
+POST {{HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "userName": "testUser",
+  "email": "test-user@mail.com",
+  "fullName": "Test User",
+  "password": "P@ssW0rd1!",
+  "confirmPassword": "P@ssW0rd1!"
+}
+
+### Login as Member
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "member@projectmanagement.com",
+  "password": "P@ssW0rd1!"
+}
+
+> {%
+    client.global.set("member_token", response.body.token);
+%}
+
+### Login as Admin
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@projectmanagement.com",
+  "password": "Admin@123"
+}
+
+> {%
+    client.global.set("admin_token", response.body.token);
+%}
+
+### Login as Test User
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-user@mail.com",
+  "password": "P@ssW0rd1!"
+}
+
+> {%
+    client.global.set("test_user_token", response.body.token);
+%}
+
+### Update Own Profile
+PATCH {{HostAddress}}/api/auth/profile
+Content-Type: application/json
+Authorization: Bearer {{member_token}}
+
+{
+  "userName": "member_updated",
+  "email": "member.updated@projectmanagement.com",
+  "fullName": "Member Updated"
+}
+
+### Get Own Profile
+GET {{HostAddress}}/api/auth/me
+Authorization: Bearer {{member_token}}

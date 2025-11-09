@@ -1,5 +1,6 @@
 using System.Dynamic;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
@@ -8,7 +9,6 @@ using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
-using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
@@ -80,7 +80,7 @@ internal sealed class GetUsers : ISlice
     }
 
     internal sealed class GetUsersQueryHandler(
-        ProjectManagementDbContext dbContext,
+        UserManager<User> userManager,
         ISortMappingProvider sortMappingProvider,
         IDataShapingService dataShapingService
     )
@@ -89,23 +89,25 @@ internal sealed class GetUsers : ISlice
         public async Task<Result<PaginationResult<ExpandoObject>>> HandleAsync(GetUsersQuery query,
             CancellationToken cancellationToken = default)
         {
-            query.Parameters.Search = query.Parameters.Search?.Trim();
+            var search = query.Parameters.Search?.Trim();
+            var page = query.Parameters.Page ?? ExtendedQueryParameters.DefaultPage;
+            var pageSize = query.Parameters.PageSize ?? ExtendedQueryParameters.DefaultPageSize;
 
             var sortMappings = sortMappingProvider.GetMappings<UserDto, User>();
 
-            var usersQuery = dbContext
+            var usersQuery = userManager
                 .Users
-                .Where(u => query.Parameters.Search == null ||
-                            EF.Functions.ILike(u.UserName!, $"%{query.Parameters.Search}%") ||
-                            EF.Functions.ILike(u.FullName, $"%{query.Parameters.Search}%") ||
-                            EF.Functions.ILike(u.Email!, $"%{query.Parameters.Search}%"))
+                .Where(u => search == null ||
+                            EF.Functions.ILike(u.UserName!, $"%{search}%") ||
+                            EF.Functions.ILike(u.FullName, $"%{search}%") ||
+                            EF.Functions.ILike(u.Email!, $"%{search}%"))
                 .ApplySort(query.Parameters.Sort, sortMappings)
                 .Select(UserMappings.ProjectToUserDto<UserDto>());
 
             var totalCount = await usersQuery.CountAsync(cancellationToken);
             var users = await usersQuery
-                .Skip((query.Parameters.Page - 1) * query.Parameters.PageSize)
-                .Take(query.Parameters.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
             var paginationResult = new PaginationResult<ExpandoObject>
@@ -113,8 +115,8 @@ internal sealed class GetUsers : ISlice
                 Items = dataShapingService.ShapeCollectionData(
                     users,
                     query.Parameters.Fields),
-                Page = query.Parameters.Page,
-                PageSize = query.Parameters.PageSize,
+                Page = page,
+                PageSize = pageSize,
                 TotalCount = totalCount
             };
 
