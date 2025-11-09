@@ -1,0 +1,19 @@
+### Get All Projects
+GET {{HostAddress}}/api/projects
+Accept: application/json
+Authorization: Bearer {{member_token}}
+
+### Create New Project
+POST {{HostAddress}}/api/projects
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{member_token}}
+
+{
+  "name": "New Project",
+  "description": "This is a new project created via API.",
+  "startDate": "2025-12-01T00:00:00Z",
+  "endDate": "2025-12-31T00:00:00Z",
+  "status": "Active",
+  "priority": "Low"
+}
