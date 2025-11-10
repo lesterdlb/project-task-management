@@ -8,8 +8,10 @@ using ProjectManagement.Api.Common.DTOs.User;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Services.Auth;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Common.Validators;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
@@ -19,26 +21,27 @@ internal sealed class CreateUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/users",
+                EndpointNames.Users.Routes.Base,
                 async (
                     CreateUserDto createUserDto,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
-                    var result = await mediator.SendCommandAsync<CreateUserCommand, Result<UserDto>>(
+                    var result = await mediator.SendCommandAsync<CreateUserCommand, Result<CreateUserResponse>>(
                         new CreateUserCommand(createUserDto),
                         cancellationToken);
 
                     return result.IsSuccess
-                        ? Results.Created($"api/users/{result.Value.Id}", result.Value)
+                        ? Results.Created(result.Value.Location, result.Value.UserDto)
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users))
+            .WithName(EndpointNames.Users.Names.CreateUser)
+            .WithTags(EndpointNames.Users.GroupName)
             .RequirePermissions(Permissions.Users.Write);
     }
 
-    internal sealed record CreateUserCommand(CreateUserDto Dto) : ICommand<Result<UserDto>>;
+    internal sealed record CreateUserCommand(CreateUserDto Dto) : ICommand<Result<CreateUserResponse>>;
 
     internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     {
@@ -52,17 +55,18 @@ internal sealed class CreateUser : ISlice
 
     internal sealed class CreateUserCommandHandler(
         ICurrentUserService currentUserService,
-        UserManager<User> userManager
+        UserManager<User> userManager,
+        ILinkService linkService
     )
-        : ICommandHandler<CreateUserCommand, Result<UserDto>>
+        : ICommandHandler<CreateUserCommand, Result<CreateUserResponse>>
     {
-        public async Task<Result<UserDto>> HandleAsync(CreateUserCommand command,
+        public async Task<Result<CreateUserResponse>> HandleAsync(CreateUserCommand command,
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
             if (userId is null)
             {
-                return Result.Failure<UserDto>(Error.Unauthorized);
+                return Result.Failure<CreateUserResponse>(Error.Unauthorized);
             }
 
             var user = new User
@@ -82,17 +86,31 @@ internal sealed class CreateUser : ISlice
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return Result.Failure<UserDto>(Error.User.CreateFailed(errors));
+                return Result.Failure<CreateUserResponse>(Error.User.CreateFailed(errors));
             }
 
             var roleResult = await userManager.AddToRoleAsync(user, user.Role.ToString());
             if (!roleResult.Succeeded)
             {
                 var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-                return Result.Failure<UserDto>(Error.User.CreateFailed(errors));
+                return Result.Failure<CreateUserResponse>(Error.User.CreateFailed(errors));
             }
 
-            return user.ToUserDto<UserDto>();
+            var userDto = user.ToUserDto<UserDto>();
+
+            userDto.Links = linkService.CreateLinksForItem(
+                EndpointNames.Users.Names.CreateUser,
+                EndpointNames.Users.Names.UpdateUser,
+                EndpointNames.Users.Names.DeleteUser,
+                userDto.Id);
+
+            return new CreateUserResponse
+            {
+                UserDto = userDto,
+                Location = linkService.CreateHref(
+                    EndpointNames.Projects.Names.GetProject,
+                    new { id = user.Id })
+            };
         }
     }
 
@@ -101,5 +119,11 @@ internal sealed class CreateUser : ISlice
         public string UserName { get; init; }
         public string Email { get; init; }
         public string FullName { get; init; }
+    }
+
+    public sealed class CreateUserResponse
+    {
+        public UserDto UserDto { get; init; }
+        public string Location { get; init; }
     }
 }

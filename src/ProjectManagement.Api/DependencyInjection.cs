@@ -5,19 +5,23 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.DTOs.Project;
 using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Services.Email;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 using ProjectManagement.Api.Mediator.Behaviors;
 using ProjectManagement.Api.Middlewares;
@@ -47,6 +51,20 @@ public static class DependencyInjection
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+        builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+        builder.Services.Configure<MvcOptions>(options =>
+        {
+            var formatter = options.OutputFormatters
+                .OfType<SystemTextJsonOutputFormatter>()
+                .First();
+
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.JsonV1);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.JsonV2);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJson);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJsonV1);
+            formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJsonV2);
+        });
 
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen();
@@ -70,6 +88,9 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<IEmailService, EmailService>();
 
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddSingleton<ILinkService, LinkService>();
+
         return builder;
     }
 
@@ -91,7 +112,6 @@ public static class DependencyInjection
         var tokenSection = builder.Configuration.GetSection(nameof(TokenOptions));
         builder.Services.Configure<TokenOptions>(tokenSection);
 
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<ITokenService, TokenService>();
 

@@ -1,6 +1,7 @@
 ### Get All Users (Member)
 GET {{HostAddress}}/api/users
 Authorization: Bearer {{member_token}}
+Accept: application/vnd.projectmanagement.hateoas+json
 
 ### Get All Users (Admin)
 GET {{HostAddress}}/api/users?page=1&pageSize=10

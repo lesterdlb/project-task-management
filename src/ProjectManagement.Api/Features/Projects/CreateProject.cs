@@ -9,7 +9,9 @@ using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.Auth;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Projects;
@@ -19,26 +21,27 @@ internal sealed class CreateProject : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/projects",
+                EndpointNames.Projects.Routes.Base,
                 async (
                     CreateProjectDto createProjectDto,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
-                    var result = await mediator.SendCommandAsync<CreateProjectCommand, Result<ProjectDto>>(
+                    var result = await mediator.SendCommandAsync<CreateProjectCommand, Result<CreateProjectResponse>>(
                         new CreateProjectCommand(createProjectDto),
                         cancellationToken);
 
                     return result.IsSuccess
-                        ? Results.Created($"api/projects/{result.Value.Id}", result.Value)
+                        ? Results.Created(result.Value.Location, result.Value.ProjectDto)
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Projects))
+            .WithName(EndpointNames.Projects.Names.CreateProject)
+            .WithTags(EndpointNames.Projects.GroupName)
             .RequirePermissions(Permissions.Projects.Write);
     }
 
-    internal sealed record CreateProjectCommand(CreateProjectDto Dto) : ICommand<Result<ProjectDto>>;
+    internal sealed record CreateProjectCommand(CreateProjectDto Dto) : ICommand<Result<CreateProjectResponse>>;
 
     internal sealed class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand>
     {
@@ -70,17 +73,18 @@ internal sealed class CreateProject : ISlice
 
     internal sealed class CreateProjectCommandHandler(
         ProjectManagementDbContext dbContext,
-        ICurrentUserService currentUserService)
-        : ICommandHandler<CreateProjectCommand, Result<ProjectDto>>
+        ICurrentUserService currentUserService,
+        ILinkService linkService)
+        : ICommandHandler<CreateProjectCommand, Result<CreateProjectResponse>>
     {
-        public async Task<Result<ProjectDto>> HandleAsync(CreateProjectCommand command,
+        public async Task<Result<CreateProjectResponse>> HandleAsync(CreateProjectCommand command,
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
 
             if (userId is null)
             {
-                return Result.Failure<ProjectDto>(Error.Unauthorized);
+                return Result.Failure<CreateProjectResponse>(Error.Unauthorized);
             }
 
             var project = command.Dto.ToEntity(userId.Value);
@@ -94,13 +98,27 @@ internal sealed class CreateProject : ISlice
             {
                 if (pgEx.ConstraintName?.Contains("name") is true)
                 {
-                    return Result.Failure<ProjectDto>(Error.Conflict);
+                    return Result.Failure<CreateProjectResponse>(Error.Conflict);
                 }
 
                 throw;
             }
 
-            return project.ToProjectDto<ProjectDto>();
+            var projectDto = project.ToProjectDto<ProjectDto>();
+
+            projectDto.Links = linkService.CreateLinksForItem(
+                EndpointNames.Projects.Names.GetProject,
+                EndpointNames.Projects.Names.UpdateProject,
+                EndpointNames.Projects.Names.DeleteProject,
+                projectDto.Id);
+
+            return new CreateProjectResponse
+            {
+                ProjectDto = projectDto,
+                Location = linkService.CreateHref(
+                    EndpointNames.Projects.Names.GetProject,
+                    new { id = project.Id })
+            };
         }
     }
 
@@ -112,5 +130,11 @@ internal sealed class CreateProject : ISlice
         public DateTime? EndDate { get; init; }
         public ProjectStatus Status { get; init; }
         public Priority Priority { get; init; }
+    }
+
+    public sealed class CreateProjectResponse
+    {
+        public ProjectDto ProjectDto { get; init; }
+        public string Location { get; init; }
     }
 }

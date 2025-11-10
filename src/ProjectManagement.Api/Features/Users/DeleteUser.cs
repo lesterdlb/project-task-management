@@ -4,6 +4,7 @@ using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
@@ -13,7 +14,7 @@ internal sealed class DeleteUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapDelete(
-                "api/users/{userId:guid}",
+                EndpointNames.Users.Routes.ById,
                 async (
                     Guid userId,
                     IMediator mediator,
@@ -28,7 +29,8 @@ internal sealed class DeleteUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users))
+            .WithName(EndpointNames.Users.Names.DeleteUser)
+            .WithTags(EndpointNames.Users.GroupName)
             .RequirePermissions(Permissions.Users.Delete);
     }
 

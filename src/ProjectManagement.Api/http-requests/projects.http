@@ -1,7 +1,8 @@
 ### Get All Projects
 GET {{HostAddress}}/api/projects
-Accept: application/json
+Accept: application/vnd.projectmanagement.hateoas+json
 Authorization: Bearer {{member_token}}
+
 
 ### Create New Project
 POST {{HostAddress}}/api/projects

@@ -5,6 +5,7 @@ using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -14,7 +15,7 @@ internal sealed class Login : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/auth/login",
+                EndpointNames.Auth.Routes.Login,
                 async (
                     LoginDto dto,
                     IMediator mediator,
@@ -29,7 +30,8 @@ internal sealed class Login : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Auth))
+            .WithName(EndpointNames.Auth.Names.Login)
+            .WithTags(EndpointNames.Auth.GroupName)
             .AllowAnonymous();
     }
 

@@ -11,8 +11,10 @@ using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.DataShaping;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Projects;
@@ -22,7 +24,7 @@ internal sealed class GetProjects : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-                "api/projects",
+                EndpointNames.Projects.Routes.Base,
                 async (
                     [AsParameters] ProjectsQueryParameters query,
                     IMediator mediator,
@@ -39,7 +41,8 @@ internal sealed class GetProjects : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Projects))
+            .WithName(EndpointNames.Projects.Names.GetProjects)
+            .WithTags(EndpointNames.Projects.GroupName)
             .RequirePermissions(Permissions.Projects.Read);
     }
 
@@ -85,7 +88,8 @@ internal sealed class GetProjects : ISlice
         ProjectManagementDbContext dbContext,
         ICurrentUserService currentUserService,
         ISortMappingProvider sortMappingProvider,
-        IDataShapingService dataShapingService
+        IDataShapingService dataShapingService,
+        ILinkService linkService
     )
         : IQueryHandler<GetProjectsQuery, Result<PaginationResult<ExpandoObject>>>
     {
@@ -124,11 +128,29 @@ internal sealed class GetProjects : ISlice
             {
                 Items = dataShapingService.ShapeCollectionData(
                     projects,
-                    query.Parameters.Fields),
+                    query.Parameters.Fields,
+                    query.Parameters.IncludeLinks
+                        ? u => linkService.CreateLinksForItem(
+                            EndpointNames.Projects.Names.GetProject,
+                            EndpointNames.Projects.Names.UpdateProject,
+                            EndpointNames.Projects.Names.DeleteProject,
+                            u.Id,
+                            query.Parameters.Fields)
+                        : null),
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount
             };
+
+            if (query.Parameters.IncludeLinks)
+            {
+                paginationResult.Links = linkService.CreateLinksForCollection(
+                    EndpointNames.Projects.Names.GetProjects,
+                    EndpointNames.Projects.Names.CreateProject,
+                    query.Parameters,
+                    paginationResult.HasNextPage,
+                    paginationResult.HasPreviousPage);
+            }
 
             return paginationResult;
         }

@@ -6,6 +6,7 @@ using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Services.Email;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -15,7 +16,7 @@ internal sealed class Register : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/auth/register",
+                EndpointNames.Auth.Routes.Register,
                 async (
                     RegisterDto registerDto,
                     IMediator mediator,
@@ -33,7 +34,8 @@ internal sealed class Register : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Auth))
+            .WithName(EndpointNames.Auth.Names.Register)
+            .WithTags(EndpointNames.Auth.GroupName)
             .AllowAnonymous();
     }
 

@@ -7,6 +7,7 @@ using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -16,7 +17,7 @@ internal sealed class GetCurrentUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-                "api/auth/me",
+                EndpointNames.Auth.Routes.GetCurrentUser,
                 async (IMediator mediator, CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendQueryAsync<GetCurrentUserQuery, Result<UserDto>>(
@@ -28,7 +29,8 @@ internal sealed class GetCurrentUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Auth))
+            .WithName(EndpointNames.Auth.Names.GetCurrentUser)
+            .WithTags(EndpointNames.Auth.GroupName)
             .RequireAuthorization();
     }
 

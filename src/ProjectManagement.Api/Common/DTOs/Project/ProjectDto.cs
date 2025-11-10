@@ -1,8 +1,9 @@
 using ProjectManagement.Api.Common.Domain.Enums;
+using ProjectManagement.Api.Common.Models;
 
 namespace ProjectManagement.Api.Common.DTOs.Project;
 
-public class ProjectDto
+public class ProjectDto : ILinksResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; }
@@ -11,4 +12,6 @@ public class ProjectDto
     public DateTime? EndDate { get; init; }
     public ProjectStatus Status { get; init; }
     public Priority Priority { get; init; }
+
+    public List<LinkDto> Links { get; set; }
 }

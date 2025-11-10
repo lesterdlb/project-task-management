@@ -10,8 +10,10 @@ using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Services.DataShaping;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
@@ -21,7 +23,7 @@ internal sealed class GetUsers : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-                "api/users",
+                EndpointNames.Users.Routes.Base,
                 async (
                     [AsParameters] UsersQueryParameters query,
                     IMediator mediator,
@@ -37,7 +39,8 @@ internal sealed class GetUsers : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users))
+            .WithName(EndpointNames.Users.Names.GetUsers)
+            .WithTags(EndpointNames.Users.GroupName)
             .RequirePermissions(Permissions.Users.Read);
     }
 
@@ -82,7 +85,8 @@ internal sealed class GetUsers : ISlice
     internal sealed class GetUsersQueryHandler(
         UserManager<User> userManager,
         ISortMappingProvider sortMappingProvider,
-        IDataShapingService dataShapingService
+        IDataShapingService dataShapingService,
+        ILinkService linkService
     )
         : IQueryHandler<GetUsersQuery, Result<PaginationResult<ExpandoObject>>>
     {
@@ -114,11 +118,29 @@ internal sealed class GetUsers : ISlice
             {
                 Items = dataShapingService.ShapeCollectionData(
                     users,
-                    query.Parameters.Fields),
+                    query.Parameters.Fields,
+                    query.Parameters.IncludeLinks
+                        ? u => linkService.CreateLinksForItem(
+                            EndpointNames.Users.Names.GetUser,
+                            EndpointNames.Users.Names.UpdateUser,
+                            EndpointNames.Users.Names.DeleteUser,
+                            u.Id,
+                            query.Parameters.Fields)
+                        : null),
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount
             };
+
+            if (query.Parameters.IncludeLinks)
+            {
+                paginationResult.Links = linkService.CreateLinksForCollection(
+                    EndpointNames.Users.Names.GetUsers,
+                    EndpointNames.Users.Names.CreateUser,
+                    query.Parameters,
+                    paginationResult.HasNextPage,
+                    paginationResult.HasPreviousPage);
+            }
 
             return paginationResult;
         }

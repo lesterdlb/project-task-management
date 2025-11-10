@@ -5,6 +5,7 @@ using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Services.Email;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -14,7 +15,7 @@ internal sealed class ResendConfirmation : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/auth/resend-confirmation",
+                EndpointNames.Auth.Routes.ResendConfirmation,
                 async (ResendConfirmationDto dto, IMediator mediator, CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendCommandAsync<ResendConfirmationCommand, Result>(
@@ -26,7 +27,8 @@ internal sealed class ResendConfirmation : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Auth))
+            .WithName(EndpointNames.Auth.Names.ResendConfirmation)
+            .WithTags(EndpointNames.Auth.GroupName)
             .AllowAnonymous();
     }
 

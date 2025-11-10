@@ -8,6 +8,7 @@ using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Common.Validators;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -17,21 +18,24 @@ internal sealed class UpdateProfile : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPatch(
-            "api/auth/profile",
-            async (
-                UpdateProfileDto updateProfileDto,
-                IMediator mediator,
-                CancellationToken cancellationToken) =>
-            {
-                var result = await mediator.SendCommandAsync<UpdateProfileCommand, Result>(
-                    new UpdateProfileCommand(updateProfileDto),
-                    cancellationToken);
+                EndpointNames.Auth.Routes.UpdateProfile,
+                async (
+                    UpdateProfileDto updateProfileDto,
+                    IMediator mediator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var result = await mediator.SendCommandAsync<UpdateProfileCommand, Result>(
+                        new UpdateProfileCommand(updateProfileDto),
+                        cancellationToken);
 
-                return result.IsSuccess
-                    ? Results.NoContent()
-                    : result.ToProblemDetails();
-            }
-        ).RequireAuthorization();
+                    return result.IsSuccess
+                        ? Results.NoContent()
+                        : result.ToProblemDetails();
+                }
+            )
+            .WithName(EndpointNames.Auth.Names.UpdateProfile)
+            .WithTags(EndpointNames.Auth.GroupName)
+            .RequireAuthorization();
     }
 
     internal sealed record UpdateProfileCommand(UpdateProfileDto Dto) : ICommand<Result>;
@@ -70,7 +74,6 @@ internal sealed class UpdateProfile : ISlice
             user.UserName = command.Dto.UserName;
             user.Email = command.Dto.Email;
             user.FullName = command.Dto.FullName;
-            //user.UpdateFromDto(command.Dto);
 
             try
             {

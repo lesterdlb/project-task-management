@@ -4,6 +4,7 @@ using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Auth;
@@ -13,7 +14,7 @@ internal sealed class ConfirmEmail : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPost(
-                "api/auth/confirm-email",
+                EndpointNames.Auth.Routes.ConfirmEmail,
                 async (ConfirmEmailDto dto, IMediator mediator, CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendCommandAsync<ConfirmEmailCommand, Result>(
@@ -25,7 +26,8 @@ internal sealed class ConfirmEmail : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Auth))
+            .WithName(EndpointNames.Auth.Names.ConfirmEmail)
+            .WithTags(EndpointNames.Auth.GroupName)
             .AllowAnonymous();
     }
 

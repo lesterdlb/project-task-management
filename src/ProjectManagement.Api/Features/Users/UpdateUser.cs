@@ -12,6 +12,7 @@ using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Common.Validators;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
@@ -21,7 +22,7 @@ internal sealed class UpdateUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapPut(
-                "api/users/{userId:guid}",
+                EndpointNames.Users.Routes.ById,
                 async (
                     Guid userId,
                     UpdateUserDto updateUserDto,
@@ -37,7 +38,8 @@ internal sealed class UpdateUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users))
+            .WithName(EndpointNames.Users.Names.UpdateUser)
+            .WithTags(EndpointNames.Users.GroupName)
             .RequirePermissions(Permissions.Users.Write);
     }
 

@@ -29,7 +29,7 @@ Content-Type: application/json
 
 {
   "email": "admin@projectmanagement.com",
-  "password": "Admin@123"
+  "password": "P@ssW0rd1!"
 }
 
 > {%

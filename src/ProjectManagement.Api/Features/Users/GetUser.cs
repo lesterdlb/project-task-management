@@ -10,7 +10,9 @@ using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
 using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Services.DataShaping;
+using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Users;
@@ -20,7 +22,7 @@ internal sealed class GetUser : ISlice
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapGet(
-                "api/users/{userId:guid}",
+                EndpointNames.Users.Routes.ById,
                 async (
                     Guid userId,
                     [AsParameters] UserQueryParameters query,
@@ -36,7 +38,8 @@ internal sealed class GetUser : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithTags(nameof(Users))
+            .WithName(EndpointNames.Users.Names.GetUser)
+            .WithTags(EndpointNames.Users.GroupName)
             .RequirePermissions(Permissions.Users.Read);
     }
 
@@ -60,7 +63,8 @@ internal sealed class GetUser : ISlice
 
     internal sealed class GetUserQueryHandler(
         UserManager<User> userManager,
-        IDataShapingService dataShapingService
+        IDataShapingService dataShapingService,
+        ILinkService linkService
     )
         : IQueryHandler<GetUserQuery, Result<ExpandoObject?>>
     {
@@ -72,9 +76,25 @@ internal sealed class GetUser : ISlice
                 .Select(UserMappings.ProjectToUserDto<UserDto>())
                 .SingleOrDefaultAsync(cancellationToken);
 
-            return user is null
-                ? Result.Failure<ExpandoObject?>(Error.NotFound)
-                : dataShapingService.ShapeData(user, query.Parameters.Fields);
+            if (user is null)
+            {
+                return Result.Failure<ExpandoObject?>(Error.NotFound);
+            }
+
+            var shapedUser = dataShapingService.ShapeData(user, query.Parameters.Fields);
+
+            if (query.Parameters.IncludeLinks)
+            {
+                (shapedUser as IDictionary<string, object?>)["links"] =
+                    linkService.CreateLinksForItem(
+                        EndpointNames.Users.Names.GetUser,
+                        EndpointNames.Users.Names.UpdateUser,
+                        EndpointNames.Users.Names.DeleteUser,
+                        user.Id,
+                        query.Parameters.Fields);
+            }
+
+            return shapedUser;
         }
     }
 
