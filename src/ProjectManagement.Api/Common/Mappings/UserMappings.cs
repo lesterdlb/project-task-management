@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.DTOs.User;
+using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Features.Users;
 
@@ -20,14 +20,15 @@ internal static class UserMappings
         };
     }
 
-    public static TDto ToUserDto<TDto>(this User user) where TDto : UserDto, new()
+    public static TDto ToUserDto<TDto>(this User user, List<LinkDto>? links = null) where TDto : UserDto, new()
     {
         return new TDto
         {
             Id = user.Id,
             UserName = user.UserName!,
             Email = user.Email!,
-            FullName = user.FullName
+            FullName = user.FullName,
+            Links = links ?? []
         };
     }
 

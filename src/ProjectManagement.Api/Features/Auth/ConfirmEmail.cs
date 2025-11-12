@@ -72,9 +72,5 @@ internal sealed class ConfirmEmail : ISlice
         }
     }
 
-    public sealed class ConfirmEmailDto
-    {
-        public required Guid UserId { get; init; }
-        public required string Token { get; init; }
-    }
+    public sealed record ConfirmEmailDto(Guid UserId, string Token);
 }

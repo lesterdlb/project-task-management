@@ -11,6 +11,7 @@ using ProjectManagement.Api.Common.Persistence;
 using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Common.Validators;
 using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
@@ -47,27 +48,12 @@ internal sealed class CreateProject : ISlice
     {
         public CreateProjectCommandValidator()
         {
-            RuleFor(c => c.Dto.Name)
-                .NotEmpty()
-                .WithMessage("Project name is required.")
-                .MaximumLength(200)
-                .WithMessage("Project name must not exceed 200 characters.");
-            RuleFor(c => c.Dto.Description)
-                .MaximumLength(5000)
-                .WithMessage("Description must not exceed 5000 characters.");
-            RuleFor(c => c.Dto.StartDate)
-                .NotEmpty()
-                .GreaterThanOrEqualTo(DateTime.Now)
-                .WithMessage("Start date is required and must be in the future.");
-            RuleFor(c => c.Dto.EndDate)
-                .GreaterThan(c => c.Dto.StartDate)
-                .WithMessage("End date must be after start date.");
-            RuleFor(c => c.Dto.Status)
-                .IsInEnum()
-                .WithMessage("Status is required and must be a valid value.");
-            RuleFor(c => c.Dto.Priority)
-                .IsInEnum()
-                .WithMessage("Priority is required and must be a valid value.");
+            RuleFor(c => c.Dto.Name).ValidateProjectName();
+            RuleFor(c => c.Dto.Description).ValidateProjectDescription();
+            RuleFor(c => c.Dto.StartDate).ValidateProjectStartDate();
+            RuleFor(c => c.Dto.EndDate).ValidateProjectEndDate(c => c.Dto.StartDate);
+            RuleFor(c => c.Dto.Status).ValidateProjectStatus();
+            RuleFor(c => c.Dto.Priority).ValidateProjectPriority();
         }
     }
 
@@ -104,37 +90,29 @@ internal sealed class CreateProject : ISlice
                 throw;
             }
 
-            var projectDto = project.ToProjectDto<ProjectDto>();
-
-            projectDto.Links = linkService.CreateLinksForItem(
-                EndpointNames.Projects.Names.GetProject,
-                EndpointNames.Projects.Names.UpdateProject,
-                EndpointNames.Projects.Names.DeleteProject,
-                projectDto.Id);
-
-            return new CreateProjectResponse
-            {
-                ProjectDto = projectDto,
-                Location = linkService.CreateHref(
+            var projectDto = project.ToProjectDto<ProjectDto>(
+                linkService.CreateLinksForItem(
                     EndpointNames.Projects.Names.GetProject,
-                    new { id = project.Id })
-            };
+                    EndpointNames.Projects.Names.UpdateProject,
+                    EndpointNames.Projects.Names.DeleteProject,
+                    project.Id)
+            );
+
+            return new CreateProjectResponse(
+                projectDto,
+                linkService.CreateHref(EndpointNames.Projects.Names.GetProject, new { id = project.Id })
+            );
         }
     }
 
-    public sealed class CreateProjectDto
-    {
-        public string Name { get; init; }
-        public string Description { get; init; } = string.Empty;
-        public DateTime StartDate { get; init; }
-        public DateTime? EndDate { get; init; }
-        public ProjectStatus Status { get; init; }
-        public Priority Priority { get; init; }
-    }
+    public sealed record CreateProjectDto(
+        string Name,
+        string Description,
+        DateTime StartDate,
+        DateTime? EndDate,
+        ProjectStatus Status,
+        Priority Priority
+    );
 
-    public sealed class CreateProjectResponse
-    {
-        public ProjectDto ProjectDto { get; init; }
-        public string Location { get; init; }
-    }
+    public sealed record CreateProjectResponse(ProjectDto ProjectDto, string Location);
 }

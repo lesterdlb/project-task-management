@@ -24,13 +24,13 @@ internal sealed class GetUser : ISlice
         endpointRouteBuilder.MapGet(
                 EndpointNames.Users.Routes.ById,
                 async (
-                    Guid userId,
+                    Guid id,
                     [AsParameters] UserQueryParameters query,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendQueryAsync<GetUserQuery, Result<ExpandoObject?>>(
-                        new GetUserQuery(userId, query),
+                        new GetUserQuery(id, query),
                         cancellationToken);
 
                     return result.IsSuccess

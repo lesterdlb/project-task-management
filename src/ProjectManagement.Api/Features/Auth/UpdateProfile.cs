@@ -98,10 +98,5 @@ internal sealed class UpdateProfile : ISlice
         }
     }
 
-    public sealed class UpdateProfileDto
-    {
-        public required string UserName { get; init; }
-        public required string Email { get; init; }
-        public required string FullName { get; init; }
-    }
+    public sealed record UpdateProfileDto(string UserName, string Email, string FullName);
 }

@@ -118,12 +118,10 @@ internal sealed class Register : ISlice
         }
     }
 
-    public sealed class RegisterDto
-    {
-        public required string UserName { get; init; }
-        public required string Email { get; init; }
-        public required string FullName { get; init; }
-        public required string Password { get; init; }
-        public required string ConfirmPassword { get; init; }
-    }
+    public sealed record RegisterDto(
+        string UserName,
+        string Email,
+        string FullName,
+        string Password,
+        string ConfirmPassword);
 }

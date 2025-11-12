@@ -134,12 +134,12 @@ internal sealed class GetUsers : ISlice
 
             if (query.Parameters.IncludeLinks)
             {
-                paginationResult.Links = linkService.CreateLinksForCollection(
+                paginationResult.AddLinks(linkService.CreateLinksForCollection(
                     EndpointNames.Users.Names.GetUsers,
                     EndpointNames.Users.Names.CreateUser,
                     query.Parameters,
                     paginationResult.HasNextPage,
-                    paginationResult.HasPreviousPage);
+                    paginationResult.HasPreviousPage));
             }
 
             return paginationResult;

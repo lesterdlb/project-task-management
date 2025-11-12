@@ -3,13 +3,21 @@ GET {{HostAddress}}/api/users
 Authorization: Bearer {{member_token}}
 Accept: application/vnd.projectmanagement.hateoas+json
 
+### Get User by ID
+GET {{HostAddress}}/api/users/019a6f16-4f63-7cb2-932f-7e43d0970b62
+Authorization: Bearer {{member_token}}
+Accept: application/vnd.projectmanagement.hateoas+json
+
 ### Get All Users (Admin)
 GET {{HostAddress}}/api/users?page=1&pageSize=10
 Authorization: Bearer {{admin_token}}
+Accept: application/vnd.projectmanagement.hateoas+json
 
 ### Get User by ID
-GET {{HostAddress}}/api/users/{{user_id}}
+@id = 019a7493-0ed8-7bd4-b21d-92954256397a
+GET {{HostAddress}}/api/users/{{id}}
 Authorization: Bearer {{admin_token}}
+Accept: application/vnd.projectmanagement.hateoas+json
 
 ### Create User (Admin only)
 POST {{HostAddress}}/api/users
@@ -33,7 +41,7 @@ Authorization: Bearer {{admin_token}}
 
 {
   "userName": "updateduser",
-  "email": "updated@example.com",
+  "email": "newuser@example.com",
   "fullName": "Updated User"
 }
 

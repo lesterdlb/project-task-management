@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.DTOs.Project;
+using ProjectManagement.Api.Common.Models;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Features.Projects;
 
@@ -22,7 +23,8 @@ internal static class ProjectMappings
         };
     }
 
-    public static TDto ToProjectDto<TDto>(this Project project) where TDto : ProjectDto, new()
+    public static TDto ToProjectDto<TDto>(this Project project, List<LinkDto>? links = null)
+        where TDto : ProjectDto, new()
     {
         return new TDto
         {
@@ -32,7 +34,8 @@ internal static class ProjectMappings
             StartDate = project.StartDate,
             EndDate = project.EndDate,
             Priority = project.Priority,
-            Status = project.Status
+            Status = project.Status,
+            Links = links ?? []
         };
     }
 
@@ -50,12 +53,15 @@ internal static class ProjectMappings
         };
     }
 
-    // public static void UpdateFromDto(this User user, UpdateUser.UpdateUserDto dto)
-    // {
-    //     user.UserName = dto.UserName;
-    //     user.Email = dto.Email;
-    //     user.FullName = dto.FullName;
-    // }
+    public static void UpdateFromDto(this Project project, UpdateProject.UpdateProjectDto dto)
+    {
+        project.Name = dto.Name;
+        project.Description = dto.Description;
+        project.StartDate = dto.StartDate;
+        project.EndDate = dto.EndDate;
+        project.Priority = dto.Priority;
+        project.Status = dto.Status;
+    }
 
     public static readonly SortMappingDefinition<ProjectDto, Project> ProjectSortMapping = new()
     {

@@ -16,12 +16,12 @@ internal sealed class DeleteUser : ISlice
         endpointRouteBuilder.MapDelete(
                 EndpointNames.Users.Routes.ById,
                 async (
-                    Guid userId,
+                    Guid id,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendCommandAsync<DeleteUserCommand, Result>(
-                        new DeleteUserCommand(userId),
+                        new DeleteUserCommand(id),
                         cancellationToken);
 
                     return result.IsSuccess

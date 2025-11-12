@@ -96,34 +96,26 @@ internal sealed class CreateUser : ISlice
                 return Result.Failure<CreateUserResponse>(Error.User.CreateFailed(errors));
             }
 
-            var userDto = user.ToUserDto<UserDto>();
+            var userDto = user.ToUserDto<UserDto>(
+                linkService.CreateLinksForItem(
+                    EndpointNames.Users.Names.CreateUser,
+                    EndpointNames.Users.Names.UpdateUser,
+                    EndpointNames.Users.Names.DeleteUser,
+                    user.Id)
+            );
 
-            userDto.Links = linkService.CreateLinksForItem(
-                EndpointNames.Users.Names.CreateUser,
-                EndpointNames.Users.Names.UpdateUser,
-                EndpointNames.Users.Names.DeleteUser,
-                userDto.Id);
-
-            return new CreateUserResponse
-            {
-                UserDto = userDto,
-                Location = linkService.CreateHref(
-                    EndpointNames.Projects.Names.GetProject,
-                    new { id = user.Id })
-            };
+            return new CreateUserResponse(
+                userDto,
+                linkService.CreateHref(EndpointNames.Projects.Names.GetProject, new { id = user.Id })
+            );
         }
     }
 
-    public sealed class CreateUserDto
-    {
-        public string UserName { get; init; }
-        public string Email { get; init; }
-        public string FullName { get; init; }
-    }
+    public sealed record CreateUserDto(
+        string UserName,
+        string Email,
+        string FullName
+    );
 
-    public sealed class CreateUserResponse
-    {
-        public UserDto UserDto { get; init; }
-        public string Location { get; init; }
-    }
+    public sealed record CreateUserResponse(UserDto UserDto, string Location);
 }

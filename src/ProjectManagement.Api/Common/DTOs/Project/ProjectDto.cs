@@ -3,7 +3,7 @@ using ProjectManagement.Api.Common.Models;
 
 namespace ProjectManagement.Api.Common.DTOs.Project;
 
-public class ProjectDto : ILinksResponse
+public record ProjectDto : ILinksResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; }
@@ -13,5 +13,5 @@ public class ProjectDto : ILinksResponse
     public ProjectStatus Status { get; init; }
     public Priority Priority { get; init; }
 
-    public List<LinkDto> Links { get; set; }
+    public List<LinkDto> Links { get; init; } = [];
 }

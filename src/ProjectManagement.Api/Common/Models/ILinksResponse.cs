@@ -2,5 +2,5 @@
 
 public interface ILinksResponse
 {
-    List<LinkDto> Links { get; set; }
+    List<LinkDto> Links { get; init; }
 }

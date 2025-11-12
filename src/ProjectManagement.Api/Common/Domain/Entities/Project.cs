@@ -4,12 +4,12 @@ namespace ProjectManagement.Api.Common.Domain.Entities;
 
 public sealed class Project : Entity
 {
-    public required string Name { get; init; }
-    public string Description { get; init; } = string.Empty;
-    public DateTime StartDate { get; init; }
-    public DateTime? EndDate { get; init; }
-    public ProjectStatus Status { get; init; }
-    public Priority Priority { get; init; }
+    public required string Name { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public ProjectStatus Status { get; set; }
+    public Priority Priority { get; set; }
 
     public Guid OwnerId { get; init; }
     public User Owner { get; init; }

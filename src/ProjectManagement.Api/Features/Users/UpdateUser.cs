@@ -24,13 +24,13 @@ internal sealed class UpdateUser : ISlice
         endpointRouteBuilder.MapPut(
                 EndpointNames.Users.Routes.ById,
                 async (
-                    Guid userId,
+                    Guid id,
                     UpdateUserDto updateUserDto,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
                     var result = await mediator.SendCommandAsync<UpdateUserCommand, Result>(
-                        new UpdateUserCommand(userId, updateUserDto),
+                        new UpdateUserCommand(id, updateUserDto),
                         cancellationToken);
 
                     return result.IsSuccess
@@ -105,10 +105,9 @@ internal sealed class UpdateUser : ISlice
         }
     }
 
-    public sealed class UpdateUserDto
-    {
-        public string UserName { get; init; }
-        public string Email { get; init; }
-        public string FullName { get; init; }
-    }
+    public sealed record UpdateUserDto(
+        string UserName,
+        string Email,
+        string FullName
+    );
 }

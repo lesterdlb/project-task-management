@@ -144,12 +144,12 @@ internal sealed class GetProjects : ISlice
 
             if (query.Parameters.IncludeLinks)
             {
-                paginationResult.Links = linkService.CreateLinksForCollection(
+                paginationResult.AddLinks(linkService.CreateLinksForCollection(
                     EndpointNames.Projects.Names.GetProjects,
                     EndpointNames.Projects.Names.CreateProject,
                     query.Parameters,
                     paginationResult.HasNextPage,
-                    paginationResult.HasPreviousPage);
+                    paginationResult.HasPreviousPage));
             }
 
             return paginationResult;

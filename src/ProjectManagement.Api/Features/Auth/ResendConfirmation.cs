@@ -81,8 +81,5 @@ internal sealed class ResendConfirmation : ISlice
         }
     }
 
-    public sealed class ResendConfirmationDto
-    {
-        public required string Email { get; init; }
-    }
+    public sealed record ResendConfirmationDto(string Email);
 }

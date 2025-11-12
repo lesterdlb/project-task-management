@@ -30,10 +30,13 @@ public static class PermissionProvider
             Permissions.Users.Read,
             Permissions.Projects.Read,
             Permissions.Projects.Write,
+            Permissions.Projects.Delete,
             Permissions.Tasks.Read,
             Permissions.Tasks.Write,
+            Permissions.Tasks.Delete,
             Permissions.Labels.Read,
             Permissions.Labels.Write,
+            Permissions.Labels.Delete,
             Permissions.Comments.Read,
             Permissions.Comments.Write,
             Permissions.Comments.Delete
@@ -52,9 +55,6 @@ public static class PermissionProvider
             Permissions.Users.Read,
             Permissions.Users.Write,
             Permissions.Users.Delete,
-            Permissions.Projects.Delete,
-            Permissions.Tasks.Delete,
-            Permissions.Labels.Delete
         ]);
 
         return permissions;

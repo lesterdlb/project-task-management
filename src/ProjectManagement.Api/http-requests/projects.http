@@ -3,7 +3,6 @@ GET {{HostAddress}}/api/projects
 Accept: application/vnd.projectmanagement.hateoas+json
 Authorization: Bearer {{member_token}}
 
-
 ### Create New Project
 POST {{HostAddress}}/api/projects
 Accept: application/json
@@ -18,3 +17,28 @@ Authorization: Bearer {{member_token}}
   "status": "Active",
   "priority": "Low"
 }
+
+### Get Project by ID
+@get_project_id = 019a7536-87c9-7858-8387-df30072885f6
+GET {{HostAddress}}/api/projects/{{get_project_id}}
+Accept: application/vnd.projectmanagement.hateoas+json
+Authorization: Bearer {{member_token}}
+
+### Update Project by ID
+PUT {{HostAddress}}/api/projects/{{get_project_id}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{member_token}}
+
+{
+  "name": "Updated Project Name",
+  "description": "Updated description for the project.",
+  "startDate": "2025-12-01T00:00:00Z",
+  "endDate": "2026-01-15T00:00:00Z",
+  "status": "Completed",
+  "priority": "Medium"
+}
+
+### Delete Project by ID
+DELETE {{HostAddress}}/api/projects/{{get_project_id}}
+Authorization: Bearer {{member_token}}

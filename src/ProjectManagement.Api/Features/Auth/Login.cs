@@ -88,11 +88,7 @@ internal sealed class Login : ISlice
         }
     }
 
-    public sealed class LoginDto
-    {
-        public required string Email { get; init; }
-        public required string Password { get; init; }
-    }
+    public sealed record LoginDto(string Email, string Password);
 
     public sealed record LoginResponse(string Token, string Email, string FullName);
 }
