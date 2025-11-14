@@ -24,4 +24,7 @@
     <ItemGroup>
         <Folder Include="Common\Persistence\Migrations\"/>
     </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="ProjectManagement.Api.UnitTests"/>
+    </ItemGroup>
 </Project>

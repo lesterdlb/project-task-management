@@ -8,7 +8,7 @@ public sealed class ProjectMember
     public DateTime DateJoined { get; init; }
     
     public Guid ProjectId { get; init; }
-    public required Project Project { get; init; }
+    public Project Project { get; init; }
     public Guid UserId { get; init; }
-    public required User User { get; init; }
+    public User User { get; init; }
 }

@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.DTOs.Project;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
@@ -12,6 +13,7 @@ using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Common.Validators;
 using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
@@ -49,15 +51,7 @@ internal sealed class GetProject : ISlice
     {
         public GetProjectQueryValidator(IDataShapingService dataShapingService)
         {
-            RuleFor(x => x.Parameters.Fields)
-                .Custom((fields, context) =>
-                {
-                    if (!dataShapingService.Validate<ProjectDto>(fields))
-                    {
-                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Fields),
-                            $"The provided data shaping fields aren't valid: '{fields}'");
-                    }
-                });
+            RuleFor(x => x.Parameters.Fields).ValidateFields<GetProjectQuery, ProjectDto>(dataShapingService);
         }
     }
 
@@ -73,14 +67,19 @@ internal sealed class GetProject : ISlice
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
-
             if (userId is null)
             {
                 return Result.Failure<ExpandoObject?>(Error.Unauthorized);
             }
+            
+            var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
+
 
             var project = await dbContext.Projects
-                .Where(p => p.Id == query.Id && (p.OwnerId == userId || p.Members.Any(m => m.UserId == userId)))
+                .Where(p => p.Id == query.Id && 
+                            (isAdmin || 
+                             p.OwnerId == userId ||
+                             p.Members.Any(m => m.UserId == userId)))
                 .Select(ProjectMappings.ProjectToProjectDto<ProjectDto>())
                 .SingleOrDefaultAsync(cancellationToken);
 

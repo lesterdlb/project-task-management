@@ -54,6 +54,11 @@ internal sealed class CreateProject : ISlice
             RuleFor(c => c.Dto.EndDate).ValidateProjectEndDate(c => c.Dto.StartDate);
             RuleFor(c => c.Dto.Status).ValidateProjectStatus();
             RuleFor(c => c.Dto.Priority).ValidateProjectPriority();
+
+            RuleFor(c => c.Dto.OwnerId)
+                .NotEmpty()
+                .When(c => c.Dto.OwnerId.HasValue)
+                .WithMessage("Owner ID must be a valid GUID if provided");
         }
     }
 
@@ -67,13 +72,37 @@ internal sealed class CreateProject : ISlice
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
-
             if (userId is null)
             {
                 return Result.Failure<CreateProjectResponse>(Error.Unauthorized);
             }
 
-            var project = command.Dto.ToEntity(userId.Value);
+            Guid ownerId;
+            if (command.Dto.OwnerId.HasValue)
+            {
+                var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
+                if (!isAdmin)
+                {
+                    return Result.Failure<CreateProjectResponse>(Error.Project.CreationForbidden);
+                }
+
+                var ownerExists = await dbContext.Users
+                    .AnyAsync(u => u.Id == command.Dto.OwnerId.Value, cancellationToken);
+
+                if (!ownerExists)
+                {
+                    return Result.Failure<CreateProjectResponse>(Error.Project.OwnerNotFound);
+                }
+
+                ownerId = command.Dto.OwnerId.Value;
+            }
+            else
+            {
+                ownerId = userId.Value;
+            }
+
+            var project = command.Dto.ToEntity(ownerId);
+
 
             try
             {
@@ -111,7 +140,8 @@ internal sealed class CreateProject : ISlice
         DateTime StartDate,
         DateTime? EndDate,
         ProjectStatus Status,
-        Priority Priority
+        Priority Priority,
+        Guid? OwnerId = null // Admin can create project for other users
     );
 
     public sealed record CreateProjectResponse(ProjectDto ProjectDto, string Location);

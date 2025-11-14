@@ -15,6 +15,8 @@ public static class EndpointNames
             public const string CreateProject = nameof(CreateProject);
             public const string UpdateProject = nameof(UpdateProject);
             public const string DeleteProject = nameof(DeleteProject);
+            public const string AddProjectMember = nameof(AddProjectMember);
+            public const string RemoveProjectMember = nameof(RemoveProjectMember);
         }
 
         public static class Routes

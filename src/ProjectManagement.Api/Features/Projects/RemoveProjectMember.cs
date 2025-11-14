@@ -11,19 +11,20 @@ using ProjectManagement.Api.Mediator;
 
 namespace ProjectManagement.Api.Features.Projects;
 
-internal sealed class DeleteProject : ISlice
+internal sealed class RemoveProjectMember : ISlice
 {
     public void AddEndpoint(IEndpointRouteBuilder endpointRouteBuilder)
     {
         endpointRouteBuilder.MapDelete(
-                EndpointNames.Projects.Routes.ById,
+                $"{EndpointNames.Projects.Routes.ById}/members/{{userId:guid}}",
                 async (
                     Guid id,
+                    Guid userId,
                     IMediator mediator,
                     CancellationToken cancellationToken) =>
                 {
-                    var result = await mediator.SendCommandAsync<DeleteProjectCommand, Result>(
-                        new DeleteProjectCommand(id),
+                    var result = await mediator.SendCommandAsync<RemoveProjectMemberCommand, Result>(
+                        new RemoveProjectMemberCommand(id, userId),
                         cancellationToken);
 
                     return result.IsSuccess
@@ -31,19 +32,19 @@ internal sealed class DeleteProject : ISlice
                         : result.ToProblemDetails();
                 }
             )
-            .WithName(EndpointNames.Projects.Names.DeleteProject)
+            .WithName(EndpointNames.Projects.Names.RemoveProjectMember)
             .WithTags(EndpointNames.Projects.GroupName)
-            .RequirePermissions(Permissions.Projects.Delete);
+            .RequirePermissions(Permissions.Projects.Write);
     }
 
-    internal sealed record DeleteProjectCommand(Guid Id) : ICommand<Result>;
+    internal sealed record RemoveProjectMemberCommand(Guid ProjectId, Guid UserId) : ICommand<Result>;
 
-    internal sealed class DeleteProjectCommandHandler(
+    internal sealed class RemoveProjectMemberCommandHandler(
         ProjectManagementDbContext dbContext,
         ICurrentUserService currentUserService)
-        : ICommandHandler<DeleteProjectCommand, Result>
+        : ICommandHandler<RemoveProjectMemberCommand, Result>
     {
-        public async Task<Result> HandleAsync(DeleteProjectCommand command,
+        public async Task<Result> HandleAsync(RemoveProjectMemberCommand command,
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
@@ -55,7 +56,7 @@ internal sealed class DeleteProject : ISlice
             var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
 
             var project = await dbContext.Projects
-                .Where(p => p.Id == command.Id &&
+                .Where(p => p.Id == command.ProjectId &&
                             (isAdmin || p.OwnerId == userId))
                 .SingleOrDefaultAsync(cancellationToken);
 
@@ -64,7 +65,16 @@ internal sealed class DeleteProject : ISlice
                 return Result.Failure(Error.NotFound);
             }
 
-            dbContext.Projects.Remove(project);
+            var projectMember = await dbContext.ProjectMembers
+                .Where(pm => pm.ProjectId == command.ProjectId && pm.UserId == command.UserId)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (projectMember is null)
+            {
+                return Result.Failure(Error.ProjectMember.UserNotFound);
+            }
+
+            dbContext.ProjectMembers.Remove(projectMember);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return Result.Success();

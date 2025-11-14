@@ -45,4 +45,25 @@ public record Error(string Code, string Message, ErrorCategory Category = ErrorC
         public static Error CreateFailed(string details) =>
             new("User.CreateFailed", $"User creation failed: {details}");
     }
+
+    public static class Project
+    {
+        public static Error CreationForbidden =>
+            new("Project.CreationForbidden", "Only administrators can create projects for other users");
+
+        public static Error OwnerNotFound =>
+            new("Project.OwnerNotFound", "The specified project owner does not exist", ErrorCategory.NotFound);
+    }
+
+    public static class ProjectMember
+    {
+        public static Error UserNotFound =>
+            new("ProjectMember.UserNotFound", "The specified user does not exist", ErrorCategory.NotFound);
+
+        public static Error AlreadyMember =>
+            new("ProjectMember.AlreadyMember", "User is already a member of this project");
+
+        public static Error OwnerAsMember =>
+            new("ProjectMember.OwnerAsMember", "Project owner cannot be added as a member");
+    }
 }

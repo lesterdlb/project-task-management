@@ -70,8 +70,11 @@ internal sealed class UpdateProject : ISlice
                 return Result.Failure(Error.Unauthorized);
             }
 
+            var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
+
             var project = await dbContext.Projects
-                .Where(p => p.Id == command.Id && p.OwnerId == userId)
+                .Where(p => p.Id == command.Id &&
+                            (isAdmin || p.OwnerId == userId))
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (project is null)

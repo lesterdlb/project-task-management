@@ -68,6 +68,7 @@ public static class DatabaseExtensions
 
     private static async Task SeedUsersAsync(UserManager<User> userManager, ProjectManagementDbContext dbContext)
     {
+        const string commonPassword = "P@ssW0rd1!";
         if (await dbContext.Users.AnyAsync())
         {
             return;
@@ -84,27 +85,59 @@ public static class DatabaseExtensions
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        var memberUser = new User
+        var member1 = new User
         {
-            UserName = "member",
-            Email = "member@projectmanagement.com",
+            UserName = "member1",
+            Email = "member1@projectmanagement.com",
             FullName = "John Doe",
             Role = UserRole.Member,
             EmailConfirmed = true,
             CreatedBy = Guid.Empty,
             CreatedAtUtc = DateTime.UtcNow
         };
+        var member2 = new User
+        {
+            UserName = "member2",
+            Email = "member2@projectmanagement.com",
+            FullName = "Jane Smith",
+            Role = UserRole.Member,
+            EmailConfirmed = true,
+            CreatedBy = Guid.Empty,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+        var member3 = new User
+        {
+            UserName = "member3",
+            Email = "member3@projectmanagement.com",
+            FullName = "Bob Johnson",
+            Role = UserRole.Member,
+            EmailConfirmed = true,
+            CreatedBy = Guid.Empty,
+            CreatedAtUtc = DateTime.UtcNow
+        };
 
-         var result = await userManager.CreateAsync(adminUser, "P@ssW0rd1!");
+        var result = await userManager.CreateAsync(adminUser, commonPassword);
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, nameof(UserRole.Admin));
         }
 
-        result = await userManager.CreateAsync(memberUser, "P@ssW0rd1!");
+        result = await userManager.CreateAsync(member1, commonPassword);
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(memberUser, nameof(UserRole.Member));
+            await userManager.AddToRoleAsync(member1, nameof(UserRole.Member));
+        }
+
+        result = await userManager.CreateAsync(member2, commonPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(member2, nameof(UserRole.Member));
+        }
+
+        result = await userManager.CreateAsync(member3, commonPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(member3, nameof(UserRole.Member));
         }
     }
 }

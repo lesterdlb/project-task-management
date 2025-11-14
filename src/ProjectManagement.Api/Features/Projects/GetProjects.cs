@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Abstractions;
 using ProjectManagement.Api.Common.Domain.Entities;
+using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.DTOs.Project;
 using ProjectManagement.Api.Common.Extensions;
 using ProjectManagement.Api.Common.Mappings;
@@ -14,6 +15,7 @@ using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Services.Links;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Common.Validators;
 using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 
@@ -54,33 +56,10 @@ internal sealed class GetProjects : ISlice
         public GetProjectsQueryValidator(ISortMappingProvider sortMappingProvider,
             IDataShapingService dataShapingService)
         {
-            RuleFor(x => x.Parameters.Page)
-                .GreaterThan(0)
-                .WithMessage("Page must be greater than 0.");
-
-            RuleFor(x => x.Parameters.PageSize)
-                .InclusiveBetween(1, 100)
-                .WithMessage("PageSize must be between 1 and 100.");
-
-            RuleFor(x => x.Parameters.Sort)
-                .Custom((sort, context) =>
-                {
-                    if (!sortMappingProvider.ValidateMappings<ProjectDto, Project>(sort))
-                    {
-                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Sort),
-                            $"The provided sort parameter isn't valid: '{sort}'");
-                    }
-                });
-
-            RuleFor(x => x.Parameters.Fields)
-                .Custom((fields, context) =>
-                {
-                    if (!dataShapingService.Validate<ProjectDto>(fields))
-                    {
-                        context.AddFailure(nameof(context.InstanceToValidate.Parameters.Fields),
-                            $"The provided data shaping fields aren't valid: '{fields}'");
-                    }
-                });
+            RuleFor(x => x.Parameters.Page).ValidatePage();
+            RuleFor(x => x.Parameters.PageSize).ValidatePageSize();
+            RuleFor(x => x.Parameters.Sort).ValidateSort<GetProjectsQuery, ProjectDto, Project>(sortMappingProvider);
+            RuleFor(x => x.Parameters.Fields).ValidateFields<GetProjectsQuery, ProjectDto>(dataShapingService);
         }
     }
 
@@ -97,11 +76,12 @@ internal sealed class GetProjects : ISlice
             CancellationToken cancellationToken = default)
         {
             var userId = currentUserService.UserId;
-
             if (userId is null)
             {
                 return Result.Failure<PaginationResult<ExpandoObject>>(Error.Unauthorized);
             }
+
+            var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
 
             var search = query.Parameters.Search?.Trim();
             var page = query.Parameters.Page ?? ExtendedQueryParameters.DefaultPage;
@@ -114,7 +94,9 @@ internal sealed class GetProjects : ISlice
                 .Where(p => search == null ||
                             EF.Functions.ILike(p.Name, $"%{search}%") ||
                             EF.Functions.ILike(p.Description, $"%{search}%"))
-                .Where(p => p.OwnerId == userId || p.Members.Any(m => m.UserId == userId))
+                .Where(p => isAdmin ||
+                            p.OwnerId == userId ||
+                            p.Members.Any(m => m.UserId == userId))
                 .ApplySort(query.Parameters.Sort, sortMappings)
                 .Select(ProjectMappings.ProjectToProjectDto<ProjectDto>());
 
