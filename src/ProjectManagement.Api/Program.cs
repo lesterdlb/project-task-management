@@ -9,7 +9,8 @@ builder
     .AddApiServices()
     .AddDatabase()
     .AddAuthenticationServices()
-    .AddErrorHandling();
+    .AddErrorHandling()
+    .AddCors();
 
 var app = builder.Build();
 
@@ -24,6 +25,7 @@ if (app.Environment.IsDevelopment())
     await app.SeedInitialDataAsync();
 }
 
+app.UseCors();
 app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging();

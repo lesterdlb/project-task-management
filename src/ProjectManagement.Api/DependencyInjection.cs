@@ -168,6 +168,23 @@ public static class DependencyInjection
         return builder;
     }
 
+    public static WebApplicationBuilder AddCors(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy
+                    .WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+
+        return builder;
+    }
+
     private static void RegisterUserQueryAndCommandHandlers(WebApplicationBuilder builder)
     {
         var assembly = typeof(DependencyInjection).Assembly;

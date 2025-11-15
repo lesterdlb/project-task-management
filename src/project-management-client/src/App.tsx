@@ -1,11 +1,25 @@
-import { Button } from '@/components/ui/button';
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {AuthProvider} from '@/contexts/AuthProvider';
+import Layout from '@/components/layout/Layout';
 
-function App() {
-	return (
-		<div className='flex min-h-svh flex-col items-center justify-center'>
-			<Button>Click me</Button>
-		</div>
-	);
-}
+import HomePage from '@/pages/HomePage';
+import LoginPage from './pages/LoginPage';
+
+import {ROUTES} from '@/lib/constants';
+
+const App = () => {
+    return (
+        <BrowserRouter>
+            <AuthProvider>
+                <Layout>
+                    <Routes>
+                        <Route path={ROUTES.HOME} element={<HomePage/>}/>
+                        <Route path={ROUTES.LOGIN} element={<LoginPage/>}/>
+                    </Routes>
+                </Layout>
+            </AuthProvider>
+        </BrowserRouter>
+    );
+};
 
 export default App;

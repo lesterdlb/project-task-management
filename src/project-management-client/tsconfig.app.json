@@ -23,6 +23,9 @@
 		"erasableSyntaxOnly": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedSideEffectImports": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noPropertyAccessFromIndexSignature": true,
 
 		"baseUrl": ".",
 		"paths": {
