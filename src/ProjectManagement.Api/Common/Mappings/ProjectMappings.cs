@@ -23,44 +23,49 @@ internal static class ProjectMappings
         };
     }
 
-    public static TDto ToProjectDto<TDto>(this Project project, List<LinkDto>? links = null)
-        where TDto : ProjectDto, new()
+    extension(Project project)
     {
-        return new TDto
+        public TDto ToProjectDto<TDto>(List<LinkDto>? links = null) where TDto : ProjectDto, new()
         {
-            Id = project.Id,
-            Name = project.Name,
-            Description = project.Description,
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            Priority = project.Priority,
-            Status = project.Status,
-            Links = links ?? []
-        };
+            return new TDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                Priority = project.Priority,
+                Status = project.Status,
+                Links = links ?? []
+            };
+        }
+
+        public void UpdateFromDto(UpdateProject.UpdateProjectDto dto)
+        {
+            project.Name = dto.Name;
+            project.Description = dto.Description;
+            project.StartDate = dto.StartDate;
+            project.EndDate = dto.EndDate;
+            project.Priority = dto.Priority;
+            project.Status = dto.Status;
+        }
     }
 
-    public static Project ToEntity(this CreateProject.CreateProjectDto project, Guid ownerId)
+    extension(CreateProject.CreateProjectDto project)
     {
-        return new Project
+        public Project ToEntity(Guid ownerId)
         {
-            Name = project.Name,
-            Description = project.Description,
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            Priority = project.Priority,
-            Status = project.Status,
-            OwnerId = ownerId
-        };
-    }
-
-    public static void UpdateFromDto(this Project project, UpdateProject.UpdateProjectDto dto)
-    {
-        project.Name = dto.Name;
-        project.Description = dto.Description;
-        project.StartDate = dto.StartDate;
-        project.EndDate = dto.EndDate;
-        project.Priority = dto.Priority;
-        project.Status = dto.Status;
+            return new Project
+            {
+                Name = project.Name,
+                Description = project.Description,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                Priority = project.Priority,
+                Status = project.Status,
+                OwnerId = ownerId
+            };
+        }
     }
 
     public static readonly SortMappingDefinition<ProjectDto, Project> ProjectSortMapping = new()

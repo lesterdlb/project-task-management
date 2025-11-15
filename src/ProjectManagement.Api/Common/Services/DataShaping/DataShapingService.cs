@@ -53,9 +53,7 @@ public sealed class DataShapingService : IDataShapingService
 
         if (fieldsSet.Any())
         {
-            propertyInfos = propertyInfos
-                .Where(p => fieldsSet.Contains(p.Name))
-                .ToArray();
+            propertyInfos = [.. propertyInfos.Where(p => fieldsSet.Contains(p.Name))];
         }
 
         List<ExpandoObject> shapedObjects = [];

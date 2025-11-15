@@ -4,20 +4,21 @@ namespace ProjectManagement.Api.Common.Slices;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSlices(this IServiceCollection services)
+    extension(IServiceCollection services)
     {
-        var currentAssembly = Assembly.GetExecutingAssembly();
-
-        var slices = currentAssembly.GetTypes().Where(t =>
-            typeof(ISlice).IsAssignableFrom(t) &&
-            t != typeof(ISlice) &&
-            t is { IsPublic: false, IsAbstract: false });
-
-        foreach (var slice in slices)
+        public void AddSlices()
         {
-            services.AddSingleton(typeof(ISlice), slice);
-        }
+            var currentAssembly = Assembly.GetExecutingAssembly();
 
-        return services;
+            var slices = currentAssembly.GetTypes().Where(t =>
+                typeof(ISlice).IsAssignableFrom(t) &&
+                t != typeof(ISlice) &&
+                t is { IsPublic: false, IsAbstract: false });
+
+            foreach (var slice in slices)
+            {
+                services.AddSingleton(typeof(ISlice), slice);
+            }
+        }
     }
 }

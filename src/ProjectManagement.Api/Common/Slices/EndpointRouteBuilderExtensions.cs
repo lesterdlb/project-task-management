@@ -2,13 +2,14 @@
 
 public static class EndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapSliceEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
+    extension(IEndpointRouteBuilder endpointRouteBuilder)
     {
-        foreach (var slice in endpointRouteBuilder.ServiceProvider.GetServices<ISlice>())
+        public void MapSliceEndpoints()
         {
-            slice.AddEndpoint(endpointRouteBuilder);
+            foreach (var slice in endpointRouteBuilder.ServiceProvider.GetServices<ISlice>())
+            {
+                slice.AddEndpoint(endpointRouteBuilder);
+            }
         }
-
-        return endpointRouteBuilder;
     }
 }

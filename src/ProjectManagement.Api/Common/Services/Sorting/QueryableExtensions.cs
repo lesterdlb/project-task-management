@@ -4,47 +4,47 @@ namespace ProjectManagement.Api.Common.Services.Sorting;
 
 public static class QueryableExtensions
 {
-    public static IQueryable<T> ApplySort<T>(
-        this IQueryable<T> query,
-        string? sort,
-        SortMapping[] mappings,
-        string defaultOrderBy = "Id")
+    extension<T>(IQueryable<T> query)
     {
-        if (string.IsNullOrWhiteSpace(sort))
+        public IQueryable<T> ApplySort(string? sort, SortMapping[] mappings, string defaultOrderBy = "Id")
         {
-            return query.OrderBy(defaultOrderBy);
-        }
-
-        var sortFields = sort.Split(',')
-            .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToArray();
-
-        var orderByParts = new List<string>();
-        foreach (var field in sortFields)
-        {
-            var (sortField, isDescending) = ParseSortField(field);
-
-            var mapping = mappings.First(m =>
-                m.SortField.Equals(sortField, StringComparison.OrdinalIgnoreCase));
-
-            var direction = (isDescending, mapping.Reverse) switch
+            if (string.IsNullOrWhiteSpace(sort))
             {
-                (false, false) => "ASC",
-                (false, true) => "DESC",
-                (true, false) => "DESC",
-                (true, true) => "ASC"
-            };
+                return query.OrderBy(defaultOrderBy);
+            }
 
-            orderByParts.Add($"{mapping.PropertyName} {direction}");
+            var sortFields = sort.Split(',')
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToArray();
+
+            var orderByParts = new List<string>();
+            foreach (var field in sortFields)
+            {
+                var (sortField, isDescending) = ParseSortField(field);
+
+                var mapping = mappings.First(m =>
+                    m.SortField.Equals(sortField, StringComparison.OrdinalIgnoreCase));
+
+                var direction = (isDescending, mapping.Reverse) switch
+                {
+                    (false, false) => "ASC",
+                    (false, true) => "DESC",
+                    (true, false) => "DESC",
+                    (true, true) => "ASC"
+                };
+
+                orderByParts.Add($"{mapping.PropertyName} {direction}");
+            }
+
+            var orderBy = string.Join(",", orderByParts);
+
+            return query.OrderBy(orderBy);
         }
-
-        var orderBy = string.Join(",", orderByParts);
-
-        return query.OrderBy(orderBy);
     }
 
-    private static (string SortField, bool IsDescending) ParseSortField(string field)
+
+    public static (string SortField, bool IsDescending) ParseSortField(string field)
     {
         var parts = field.Split(' ');
         var sortField = parts[0];
