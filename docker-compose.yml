@@ -1,10 +1,44 @@
 services:
+  projectmanagement.api:
+    build:
+      context: .
+      dockerfile: src/ProjectManagement.Api/Dockerfile
+      args:
+        CERT_PASSWORD: ${CERT_PASSWORD}
+    ports:
+      - "7000:7000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=https://+:7000
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${CERT_PASSWORD}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx
+      - ConnectionStrings__Database=Host=projectmanagement.postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - TokenOptions__SecretKey=${JWT_SECRET_KEY}
+      - TokenOptions__Issuer=${JWT_ISSUER}
+      - TokenOptions__Audience=${JWT_AUDIENCE}
+      - TokenOptions__ExpirationMinutes=${JWT_EXPIRATION_MINUTES}
+    depends_on:
+      projectmanagement.postgres:
+        condition: service_healthy
+
+  projectmanagement.client:
+    build:
+      context: ./src/project-management-client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    ports:
+      - "5173:5173"
+    depends_on:
+      projectmanagement.api:
+        condition: service_started
+
   projectmanagement.postgres:
     image: postgres:17.6
     environment:
-      POSTGRES_DB: ProjectTaskManagementDb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./.containers/postgres_data:/var/lib/postgresql/data
     ports:

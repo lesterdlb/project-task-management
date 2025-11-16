@@ -73,6 +73,18 @@ clear separation between UI components and business logic.
 
 ## Running the Project
 
+```bash
+# Clone the repository
+git clone https://github.com/lesterdlb/project-task-management.git
+cd project-task-management
+cp .env.example .env
+docker compose up -d
+```
+
+- Frontend: http://localhost:5173
+- API: https://localhost:7000
+- Swagger: https://localhost:7000/swagger
+
 ## API Examples
 
 The API uses standard REST conventions with additional HATEOAS support. Here are a few examples:
