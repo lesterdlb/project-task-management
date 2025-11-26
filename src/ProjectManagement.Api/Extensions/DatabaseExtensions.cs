@@ -5,6 +5,7 @@ using ProjectManagement.Api.Common.Authorization;
 using ProjectManagement.Api.Common.Domain.Entities;
 using ProjectManagement.Api.Common.Domain.Enums;
 using ProjectManagement.Api.Common.Persistence;
+using ProjectManagement.Api.Common.Services.Seeding;
 
 namespace ProjectManagement.Api.Extensions;
 
@@ -35,11 +36,14 @@ public static class DatabaseExtensions
             var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
 
             try
             {
                 await SeedRolesAsync(roleManager);
-                await SeedUsersAsync(userManager, dbContext);
+                await SeedAdminUserAsync(userManager, dbContext);
+
+                await seeder.SeedDummyDataAsync(userCount: 5, projectCount: 40);
             }
             catch (Exception e)
             {
@@ -68,7 +72,8 @@ public static class DatabaseExtensions
             }
         }
 
-        private static async Task SeedUsersAsync(UserManager<User> userManager, ProjectManagementDbContext dbContext)
+        private static async Task SeedAdminUserAsync(UserManager<User> userManager,
+            ProjectManagementDbContext dbContext)
         {
             const string commonPassword = "P@ssW0rd1!";
             if (await dbContext.Users.AnyAsync())
@@ -87,59 +92,10 @@ public static class DatabaseExtensions
                 CreatedAtUtc = DateTime.UtcNow
             };
 
-            var member1 = new User
-            {
-                UserName = "member1",
-                Email = "member1@projectmanagement.com",
-                FullName = "John Doe",
-                Role = UserRole.Member,
-                EmailConfirmed = true,
-                CreatedBy = Guid.Empty,
-                CreatedAtUtc = DateTime.UtcNow
-            };
-            var member2 = new User
-            {
-                UserName = "member2",
-                Email = "member2@projectmanagement.com",
-                FullName = "Jane Smith",
-                Role = UserRole.Member,
-                EmailConfirmed = true,
-                CreatedBy = Guid.Empty,
-                CreatedAtUtc = DateTime.UtcNow
-            };
-            var member3 = new User
-            {
-                UserName = "member3",
-                Email = "member3@projectmanagement.com",
-                FullName = "Bob Johnson",
-                Role = UserRole.Member,
-                EmailConfirmed = true,
-                CreatedBy = Guid.Empty,
-                CreatedAtUtc = DateTime.UtcNow
-            };
-
             var result = await userManager.CreateAsync(adminUser, commonPassword);
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, nameof(UserRole.Admin));
-            }
-
-            result = await userManager.CreateAsync(member1, commonPassword);
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(member1, nameof(UserRole.Member));
-            }
-
-            result = await userManager.CreateAsync(member2, commonPassword);
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(member2, nameof(UserRole.Member));
-            }
-
-            result = await userManager.CreateAsync(member3, commonPassword);
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(member3, nameof(UserRole.Member));
             }
         }
     }

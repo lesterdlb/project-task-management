@@ -1,6 +1,6 @@
 export const formatDate = (dateString: string | null | undefined): string => {
 	if (!dateString) {
-		return NaN.toString();
+		return 'N/A';
 	}
 
 	const date = new Date(dateString);

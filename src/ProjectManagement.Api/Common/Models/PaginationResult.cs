@@ -10,7 +10,7 @@ public sealed record PaginationResult<T> : ICollectionResponse<T>, ILinksRespons
 
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page < TotalPages;
-    private int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
 
     public void AddLinks(List<LinkDto> links)
     {

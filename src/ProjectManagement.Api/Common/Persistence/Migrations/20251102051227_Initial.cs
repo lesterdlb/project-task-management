@@ -87,7 +87,7 @@ public partial class Initial : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                 description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                 end_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                 priority = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),

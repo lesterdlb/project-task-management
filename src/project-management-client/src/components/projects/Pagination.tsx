@@ -1,26 +1,32 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { type PaginationMetadata } from '@/types/api.types';
 
 interface PaginationProps {
-	metadata: PaginationMetadata;
+	page: number;
+	totalPages: number;
+	hasPreviousPage: boolean;
+	hasNextPage: boolean;
 	onPageChange: (page: number) => void;
 }
 
-export const Pagination = ({ metadata, onPageChange }: PaginationProps) => {
-	const { currentPage, totalPages, hasPrevious, hasNext } = metadata;
-
+export const Pagination = ({
+	page,
+	totalPages,
+	hasPreviousPage,
+	hasNextPage,
+	onPageChange,
+}: PaginationProps) => {
 	return (
 		<div className='flex items-center justify-between'>
 			<p className='text-sm text-muted-foreground'>
-				Page {currentPage} of {totalPages}
+				Page {page} of {totalPages}
 			</p>
 			<div className='flex gap-2'>
 				<Button
 					variant='outline'
 					size='sm'
-					onClick={() => onPageChange(currentPage - 1)}
-					disabled={!hasPrevious}
+					onClick={() => onPageChange(page - 1)}
+					disabled={!hasPreviousPage}
 				>
 					<ChevronLeft className='h-4 w-4 mr-1' />
 					Previous
@@ -28,8 +34,8 @@ export const Pagination = ({ metadata, onPageChange }: PaginationProps) => {
 				<Button
 					variant='outline'
 					size='sm'
-					onClick={() => onPageChange(currentPage + 1)}
-					disabled={!hasNext}
+					onClick={() => onPageChange(page + 1)}
+					disabled={!hasNextPage}
 				>
 					Next
 					<ChevronRight className='h-4 w-4 ml-1' />

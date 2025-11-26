@@ -18,6 +18,7 @@ using ProjectManagement.Api.Common.Services.Auth;
 using ProjectManagement.Api.Common.Services.DataShaping;
 using ProjectManagement.Api.Common.Services.Email;
 using ProjectManagement.Api.Common.Services.Links;
+using ProjectManagement.Api.Common.Services.Seeding;
 using ProjectManagement.Api.Common.Services.Sorting;
 using ProjectManagement.Api.Common.Slices;
 using ProjectManagement.Api.Constants;
@@ -104,6 +105,8 @@ public static class DependencyInjection
                         npgsqlOptions => npgsqlOptions
                             .MigrationsHistoryTable(HistoryRepository.DefaultTableName, "public"))
                     .UseSnakeCaseNamingConvention());
+
+            builder.Services.AddScoped<DataSeeder>();
 
             return builder;
         }

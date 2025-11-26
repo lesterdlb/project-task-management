@@ -6,18 +6,14 @@ export interface ApiError {
 	detail?: string;
 }
 
-export interface PaginationMetadata {
-	currentPage: number;
+export interface PaginatedResponse<T> {
+	items: T[];
+	page: number;
 	pageSize: number;
 	totalPages: number;
 	totalCount: number;
-	hasPrevious: boolean;
-	hasNext: boolean;
-}
-
-export interface PaginatedResponse<T> {
-	items: T[];
-	metadata: PaginationMetadata;
+	hasPreviousPage: boolean;
+	hasNextPage: boolean;
 }
 
 export interface Link {

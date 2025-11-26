@@ -41,7 +41,7 @@ export interface CreateProjectRequest {
 	name: string;
 	description: string;
 	startDate: string;
-	endDate: string;
+	endDate?: string;
 	status: ProjectStatus;
 	priority: ProjectPriority;
 	ownerId?: string; // Only for admins
