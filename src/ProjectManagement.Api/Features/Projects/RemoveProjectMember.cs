@@ -71,7 +71,7 @@ internal sealed class RemoveProjectMember : ISlice
 
             if (projectMember is null)
             {
-                return Result.Failure(Error.ProjectMember.UserNotFound);
+                return Result.Failure(ProjectMemberErrors.UserNotFound);
             }
 
             dbContext.ProjectMembers.Remove(projectMember);

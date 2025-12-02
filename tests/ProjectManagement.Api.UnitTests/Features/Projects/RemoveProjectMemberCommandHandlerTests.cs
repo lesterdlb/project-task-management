@@ -206,7 +206,7 @@ public class RemoveProjectMemberCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.ProjectMember.UserNotFound.Code);
+        result.Error.Code.Should().Be(ProjectMemberErrors.UserNotFound.Code);
     }
 
     [Fact]

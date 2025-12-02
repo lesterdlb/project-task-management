@@ -83,7 +83,7 @@ internal sealed class CreateProject : ISlice
                 var isAdmin = currentUserService.IsInRole(nameof(UserRole.Admin));
                 if (!isAdmin)
                 {
-                    return Result.Failure<CreateProjectResponse>(Error.Project.CreationForbidden);
+                    return Result.Failure<CreateProjectResponse>(ProjectErrors.CreationForbidden);
                 }
 
                 var ownerExists = await dbContext.Users
@@ -91,7 +91,7 @@ internal sealed class CreateProject : ISlice
 
                 if (!ownerExists)
                 {
-                    return Result.Failure<CreateProjectResponse>(Error.Project.OwnerNotFound);
+                    return Result.Failure<CreateProjectResponse>(ProjectErrors.OwnerNotFound);
                 }
 
                 ownerId = command.Dto.OwnerId.Value;

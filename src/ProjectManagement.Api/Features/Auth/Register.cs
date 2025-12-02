@@ -96,7 +96,7 @@ internal sealed class Register : ISlice
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return Result.Failure(Error.Auth.RegistrationFailed(errors));
+                return Result.Failure(AuthErrors.RegistrationFailed(errors));
             }
 
             await userManager.AddToRoleAsync(user, nameof(UserRole.Member));

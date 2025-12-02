@@ -60,7 +60,7 @@ internal sealed class ResendConfirmation : ISlice
 
             if (user.EmailConfirmed)
             {
-                return Result.Failure(Error.Auth.EmailAlreadyConfirmed);
+                return Result.Failure(AuthErrors.EmailAlreadyConfirmed);
             }
 
             var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -74,7 +74,7 @@ internal sealed class ResendConfirmation : ISlice
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to send confirmation email to {Email}", user.Email);
-                return Result.Failure(Error.Auth.RegistrationFailed(ex.Message));
+                return Result.Failure(AuthErrors.RegistrationFailed(ex.Message));
             }
 
             return Result.Success();

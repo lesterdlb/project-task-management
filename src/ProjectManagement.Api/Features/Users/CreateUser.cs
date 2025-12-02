@@ -86,14 +86,14 @@ internal sealed class CreateUser : ISlice
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return Result.Failure<CreateUserResponse>(Error.User.CreateFailed(errors));
+                return Result.Failure<CreateUserResponse>(UserErrors.CreateFailed(errors));
             }
 
             var roleResult = await userManager.AddToRoleAsync(user, user.Role.ToString());
             if (!roleResult.Succeeded)
             {
                 var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-                return Result.Failure<CreateUserResponse>(Error.User.CreateFailed(errors));
+                return Result.Failure<CreateUserResponse>(UserErrors.CreateFailed(errors));
             }
 
             var userDto = user.ToUserDto<UserDto>(

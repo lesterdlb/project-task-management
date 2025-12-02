@@ -82,17 +82,17 @@ internal sealed class AddProjectMember : ISlice
 
             if (!userExists)
             {
-                return Result.Failure(Error.ProjectMember.UserNotFound);
+                return Result.Failure(ProjectMemberErrors.UserNotFound);
             }
 
             if (project.Members.Any(m => m.UserId == command.Dto.UserId))
             {
-                return Result.Failure(Error.ProjectMember.AlreadyMember);
+                return Result.Failure(ProjectMemberErrors.AlreadyMember);
             }
 
             if (project.OwnerId == command.Dto.UserId)
             {
-                return Result.Failure(Error.ProjectMember.OwnerAsMember);
+                return Result.Failure(ProjectMemberErrors.OwnerAsMember);
             }
 
             var projectMember = new ProjectMember

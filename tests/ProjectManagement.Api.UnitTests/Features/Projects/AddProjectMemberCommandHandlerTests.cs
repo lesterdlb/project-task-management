@@ -199,7 +199,7 @@ public class AddProjectMemberCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.ProjectMember.UserNotFound.Code);
+        result.Error.Code.Should().Be(ProjectMemberErrors.UserNotFound.Code);
 
         var memberCount = await DbContext.ProjectMembers.CountAsync();
         memberCount.Should().Be(0);
@@ -239,7 +239,7 @@ public class AddProjectMemberCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.ProjectMember.AlreadyMember.Code);
+        result.Error.Code.Should().Be(ProjectMemberErrors.AlreadyMember.Code);
 
         var memberCount = await DbContext.ProjectMembers
             .Where(pm => pm.ProjectId == projectId)
@@ -276,7 +276,7 @@ public class AddProjectMemberCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.ProjectMember.OwnerAsMember.Code);
+        result.Error.Code.Should().Be(ProjectMemberErrors.OwnerAsMember.Code);
 
         var memberCount = await DbContext.ProjectMembers.CountAsync();
         memberCount.Should().Be(0);

@@ -63,12 +63,12 @@ internal sealed class Login : ISlice
 
             if (user is null)
             {
-                return Result.Failure<LoginResponse>(Error.Auth.InvalidCredentials);
+                return Result.Failure<LoginResponse>(AuthErrors.InvalidCredentials);
             }
 
             if (!await userManager.IsEmailConfirmedAsync(user))
             {
-                return Result.Failure<LoginResponse>(Error.Auth.EmailNotConfirmed);
+                return Result.Failure<LoginResponse>(AuthErrors.EmailNotConfirmed);
             }
 
             var result = await signInManager.CheckPasswordSignInAsync(
@@ -78,7 +78,7 @@ internal sealed class Login : ISlice
 
             if (!result.Succeeded)
             {
-                return Result.Failure<LoginResponse>(Error.Auth.InvalidCredentials);
+                return Result.Failure<LoginResponse>(AuthErrors.InvalidCredentials);
             }
 
             var roles = await userManager.GetRolesAsync(user);

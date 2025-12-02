@@ -129,7 +129,7 @@ public class CreateProjectCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.Project.CreationForbidden.Code);
+        result.Error.Code.Should().Be(ProjectErrors.CreationForbidden.Code);
 
         var projectCount = await DbContext.Projects.CountAsync();
         projectCount.Should().Be(0);
@@ -166,7 +166,7 @@ public class CreateProjectCommandHandlerTests : ProjectHandlerTestsBase
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(Error.Project.OwnerNotFound.Code);
+        result.Error.Code.Should().Be(ProjectErrors.OwnerNotFound.Code);
 
         var projectCount = await DbContext.Projects.CountAsync();
         projectCount.Should().Be(0);

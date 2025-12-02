@@ -52,12 +52,12 @@ internal sealed class ConfirmEmail : ISlice
 
             if (user is null)
             {
-                return Result.Failure(Error.Auth.UserNotFound);
+                return Result.Failure(AuthErrors.UserNotFound);
             }
 
             if (user.EmailConfirmed)
             {
-                return Result.Failure(Error.Auth.EmailAlreadyConfirmed);
+                return Result.Failure(AuthErrors.EmailAlreadyConfirmed);
             }
 
             var result = await userManager.ConfirmEmailAsync(user, command.Dto.Token);
@@ -68,7 +68,7 @@ internal sealed class ConfirmEmail : ISlice
             }
 
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(Error.Auth.EmailConfirmationFailed(errors));
+            return Result.Failure(AuthErrors.EmailConfirmationFailed(errors));
         }
     }
 
