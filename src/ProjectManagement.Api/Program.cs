@@ -1,5 +1,5 @@
 using ProjectManagement.Api;
-using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Infrastructure.Slices;
 using ProjectManagement.Api.Extensions;
 using Serilog;
 

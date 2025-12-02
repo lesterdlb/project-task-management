@@ -1,5 +1,5 @@
-using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Domain.Enums;
+using ProjectManagement.Api.Core.Domain.Entities;
+using ProjectManagement.Api.Core.Domain.Enums;
 
 namespace ProjectManagement.Api.UnitTests.Helpers;
 

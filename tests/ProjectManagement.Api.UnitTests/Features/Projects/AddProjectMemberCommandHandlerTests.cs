@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Api.Common.Domain.Abstractions;
-using ProjectManagement.Api.Common.Domain.Enums;
+using ProjectManagement.Api.Core.Domain.Abstractions;
+using ProjectManagement.Api.Core.Domain.Enums;
 using ProjectManagement.Api.Features.Projects;
 using ProjectManagement.Api.UnitTests.Helpers;
 

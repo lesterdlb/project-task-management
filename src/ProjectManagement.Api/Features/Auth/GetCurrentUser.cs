@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Api.Common.Domain.Abstractions;
-using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.DTOs.User;
-using ProjectManagement.Api.Common.Extensions;
-using ProjectManagement.Api.Common.Mappings;
-using ProjectManagement.Api.Common.Services.Auth;
-using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Core.Domain.Abstractions;
+using ProjectManagement.Api.Core.Domain.Entities;
+using ProjectManagement.Api.Core.Application.DTOs.User;
+using ProjectManagement.Api.Infrastructure.Extensions;
+using ProjectManagement.Api.Core.Application.Mappings;
+using ProjectManagement.Api.Core.Application.Services.Auth;
+using ProjectManagement.Api.Infrastructure.Slices;
 using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 

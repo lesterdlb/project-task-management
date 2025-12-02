@@ -1,13 +1,13 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Api.Common.Authorization;
-using ProjectManagement.Api.Common.Domain.Abstractions;
-using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Domain.Enums;
-using ProjectManagement.Api.Common.Extensions;
-using ProjectManagement.Api.Common.Persistence;
-using ProjectManagement.Api.Common.Services.Auth;
-using ProjectManagement.Api.Common.Slices;
+using ProjectManagement.Api.Core.Application.Authorization;
+using ProjectManagement.Api.Core.Domain.Abstractions;
+using ProjectManagement.Api.Core.Domain.Entities;
+using ProjectManagement.Api.Core.Domain.Enums;
+using ProjectManagement.Api.Infrastructure.Extensions;
+using ProjectManagement.Api.Infrastructure.Persistence;
+using ProjectManagement.Api.Core.Application.Services.Auth;
+using ProjectManagement.Api.Infrastructure.Slices;
 using ProjectManagement.Api.Constants;
 using ProjectManagement.Api.Mediator;
 

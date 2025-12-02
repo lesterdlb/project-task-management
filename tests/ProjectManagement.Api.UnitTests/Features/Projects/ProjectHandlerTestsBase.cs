@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using ProjectManagement.Api.Common.Domain.Entities;
-using ProjectManagement.Api.Common.Mappings;
-using ProjectManagement.Api.Common.Models;
-using ProjectManagement.Api.Common.Persistence;
-using ProjectManagement.Api.Common.Services.Auth;
-using ProjectManagement.Api.Common.Services.DataShaping;
-using ProjectManagement.Api.Common.Services.Links;
-using ProjectManagement.Api.Common.Services.Sorting;
+using ProjectManagement.Api.Core.Domain.Entities;
+using ProjectManagement.Api.Core.Application.Mappings;
+using ProjectManagement.Api.Core.Application.Models;
+using ProjectManagement.Api.Infrastructure.Persistence;
+using ProjectManagement.Api.Core.Application.Services.Auth;
+using ProjectManagement.Api.Core.Application.Services.DataShaping;
+using ProjectManagement.Api.Core.Application.Services.Links;
+using ProjectManagement.Api.Core.Application.Services.Sorting;
 
 namespace ProjectManagement.Api.UnitTests.Features.Projects;
 

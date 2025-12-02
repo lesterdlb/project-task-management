@@ -1,5 +1,5 @@
 using FluentAssertions;
-using ProjectManagement.Api.Common.Domain.Abstractions;
+using ProjectManagement.Api.Core.Domain.Abstractions;
 using ProjectManagement.Api.Features.Projects;
 using ProjectManagement.Api.UnitTests.Helpers;
 
